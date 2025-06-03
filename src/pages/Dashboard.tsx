@@ -100,7 +100,7 @@ export const Dashboard = () => {
               <Button className="w-full sm:w-auto" asChild>
                 <Link to="/new-job">
                   <Plus className="h-4 w-4 mr-2" />
-                  Start New Project
+                  Start New Video
                 </Link>
               </Button>
             </CardContent>

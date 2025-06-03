@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Video, Menu, Home, History, Settings, Plus, LogOut } from 'lucide-react';
+import { Video, Menu, Home, History, Settings, Plus, LogOut, User } from 'lucide-react';
 
 export const Navigation = () => {
   const { user, signOut } = useAuth();
@@ -15,7 +15,7 @@ export const Navigation = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'New Job', href: '/new-job', icon: Plus },
+    { name: 'New Video', href: '/new-job', icon: Plus },
     { name: 'History', href: '/history', icon: History },
     ...(isAdmin ? [{ name: 'Webhook Settings', href: '/settings/webhooks', icon: Settings }] : []),
   ];
@@ -48,7 +48,7 @@ export const Navigation = () => {
   if (!user) return null;
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Clickable Logo */}
@@ -64,7 +64,13 @@ export const Navigation = () => {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
+            <Link 
+              to="/profile" 
+              className="text-sm text-gray-600 hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-2"
+            >
+              <User className="h-4 w-4" />
+              {user.email}
+            </Link>
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign out
@@ -92,7 +98,14 @@ export const Navigation = () => {
                   />
                   
                   <div className="border-t pt-4 mt-4">
-                    <div className="text-sm text-gray-600 mb-4 px-3">{user.email}</div>
+                    <Link 
+                      to="/profile" 
+                      className="flex items-center gap-2 text-sm text-gray-600 mb-4 px-3 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      {user.email}
+                    </Link>
                     <Button 
                       variant="outline" 
                       className="w-full" 

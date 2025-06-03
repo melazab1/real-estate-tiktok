@@ -7,8 +7,10 @@ import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { Navigation } from '@/components/Navigation';
 import { RouteGuard } from '@/components/RouteGuard';
 import { VideoPlayerCard } from '@/components/VideoPlayerCard';
-import { VideoStatsGrid } from '@/components/VideoStatsGrid';
-import { VideoActions } from '@/components/VideoActions';
+import { VideoMetadata } from '@/components/VideoMetadata';
+import { VideoDownloadSection } from '@/components/VideoDownloadSection';
+import { VideoShareSection } from '@/components/VideoShareSection';
+import { WhatsNextSection } from '@/components/WhatsNextSection';
 import { JobResultActions } from '@/components/JobResultActions';
 import { toast } from '@/hooks/use-toast';
 import type { Video as VideoType, Job } from '@/types/job';
@@ -67,8 +69,8 @@ const JobResult = () => {
             status: 'completed',
             video_url: 'https://example.com/sample-video.mp4',
             thumbnail_url: 'https://via.placeholder.com/640x360/4f46e5/ffffff?text=Property+Video',
-            duration: 120,
-            file_size: 25600000
+            duration: 30,
+            file_size: 13000000
           });
         }, 5000);
       }
@@ -78,10 +80,6 @@ const JobResult = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const editScript = () => {
-    navigate(`/job/${jobId}/script`);
   };
 
   const createAnother = () => {
@@ -112,10 +110,10 @@ const JobResult = () => {
       <div className="min-h-screen bg-gray-50">
         <Navigation />
 
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Breadcrumb items={[
             { label: 'Dashboard', href: '/dashboard' },
-            { label: 'New Project', href: '/new-job' },
+            { label: 'New Video', href: '/new-job' },
             { label: 'Review Data', href: `/job/${jobId}/review` },
             { label: 'Script & Voice', href: `/job/${jobId}/script` },
             { label: 'Video Result' }
@@ -123,17 +121,29 @@ const JobResult = () => {
 
           <ProgressIndicator currentStep={4} totalSteps={4} stepLabel="Your Video is Ready!" />
 
-          <div className="space-y-6">
-            <VideoPlayerCard video={video} />
-            
-            <VideoStatsGrid video={video} />
-            
-            <VideoActions video={video} />
-            
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Video Player */}
+            <div className="lg:col-span-2">
+              <VideoPlayerCard video={video} />
+              <div className="mt-6">
+                <VideoMetadata video={video} />
+              </div>
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="space-y-6">
+              <VideoDownloadSection video={video} />
+              <VideoShareSection video={video} />
+              <WhatsNextSection />
+            </div>
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="mt-8">
             <JobResultActions 
               video={video} 
               jobId={jobId!}
-              onEditScript={editScript}
+              onEditScript={() => navigate(`/job/${jobId}/script`)}
               onCreateAnother={createAnother}
             />
           </div>

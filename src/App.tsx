@@ -16,6 +16,7 @@ import JobReview from "./pages/JobReview";
 import JobScript from "./pages/JobScript";
 import JobResult from "./pages/JobResult";
 import JobHistory from "./pages/JobHistory";
+import Profile from "./pages/Profile";
 import WebhookSettings from "./pages/WebhookSettings";
 import NotFound from "./pages/NotFound";
 import AuthNew from "./pages/AuthNew";
@@ -55,6 +56,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />
