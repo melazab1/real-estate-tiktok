@@ -46,7 +46,12 @@ const JobReview = () => {
         .maybeSingle();
 
       if (!propertyError && propertyData) {
-        setProperty(propertyData);
+        // Convert the database response to our Property type
+        const convertedProperty: Property = {
+          ...propertyData,
+          is_visible: propertyData.is_visible as Record<string, boolean> || {}
+        };
+        setProperty(convertedProperty);
       } else {
         // Create default property record
         const newProperty = {
@@ -76,7 +81,11 @@ const JobReview = () => {
           .single();
 
         if (!createError) {
-          setProperty(createdProperty);
+          const convertedCreatedProperty: Property = {
+            ...createdProperty,
+            is_visible: createdProperty.is_visible as Record<string, boolean> || {}
+          };
+          setProperty(convertedCreatedProperty);
         }
       }
 
