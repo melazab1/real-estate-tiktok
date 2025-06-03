@@ -8,7 +8,7 @@ import { JobHistoryFilters } from '@/components/JobHistoryFilters';
 import { JobHistoryTable } from '@/components/JobHistoryTable';
 import { JobHistoryEmptyState } from '@/components/JobHistoryEmptyState';
 import { getJobIdentifier } from '@/utils/routeUtils';
-import { Job } from '@/types/job';
+import { Job, Property, Video } from '@/types/job';
 
 export const JobHistory = () => {
   const { user } = useAuth();
@@ -62,7 +62,19 @@ export const JobHistory = () => {
       if (error) {
         console.error('Error fetching jobs:', error);
       } else {
-        setJobs(data || []);
+        // Transform the data to match our TypeScript interfaces
+        const transformedJobs: Job[] = (data || []).map(job => ({
+          ...job,
+          properties: job.properties?.map((prop: any): Property => ({
+            ...prop,
+            is_visible: prop.is_visible as Record<string, boolean> || {}
+          })) || [],
+          videos: job.videos?.map((video: any): Video => ({
+            ...video
+          })) || []
+        }));
+        
+        setJobs(transformedJobs);
       }
     } catch (error) {
       console.error('Error fetching jobs:', error);

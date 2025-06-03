@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Eye } from 'lucide-react';
 import { getJobIdentifier } from '@/utils/routeUtils';
-import type { Job } from '@/types/job';
+import type { Job, Property } from '@/types/job';
 
 export const RecentJobs = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -48,7 +48,17 @@ export const RecentJobs = () => {
         .limit(5);
 
       if (error) throw error;
-      setJobs(data || []);
+      
+      // Transform the data to match our TypeScript interfaces
+      const transformedJobs: Job[] = (data || []).map(job => ({
+        ...job,
+        properties: job.properties?.map((prop: any): Property => ({
+          ...prop,
+          is_visible: prop.is_visible as Record<string, boolean> || {}
+        })) || []
+      }));
+      
+      setJobs(transformedJobs);
     } catch (error) {
       console.error('Error fetching recent jobs:', error);
     } finally {
