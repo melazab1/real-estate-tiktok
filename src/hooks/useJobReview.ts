@@ -31,13 +31,13 @@ export const useJobReview = () => {
       console.log('Job status updated:', updatedJob.status, updatedJob.detailed_status);
       
       // Show status updates to user only for significant changes
-      if (updatedJob.detailed_status && updatedJob.detailed_status !== detailedStatus) {
+      if (updatedJob.detailed_status) {
         toast({
           title: "Status Update",
           description: updatedJob.detailed_status
         });
       }
-    }, [detailedStatus]),
+    }, []),
     onComplete: useCallback((completedJob: Job) => {
       if (completedJob.status === 'completed') {
         toast({
@@ -47,11 +47,11 @@ export const useJobReview = () => {
       } else if (completedJob.status === 'failed') {
         toast({
           title: "Error",
-          description: errorDetails || "Process failed. Please try again.",
+          description: completedJob.error_details || "Process failed. Please try again.",
           variant: "destructive"
         });
       }
-    }, [errorDetails]),
+    }, []),
     onError: useCallback((error: Error) => {
       console.error('Real-time error:', error);
       toast({
