@@ -38,7 +38,7 @@ export const WebhookConfigurationSection = ({
 
       <WebhookCard
         title="Script Generation Webhook"
-        description="Called when user clicks \"Generate Script\" after reviewing property data."
+        description='Called when user clicks "Generate Script" after reviewing property data.'
         url={settings.script_generation_url || ''}
         onUrlChange={(value) => onUpdateSetting('script_generation_url', value)}
         fieldId="script_generation_url"
