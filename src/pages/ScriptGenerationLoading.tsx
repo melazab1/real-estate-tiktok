@@ -5,7 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
 import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
-import { ProcessingSteps } from '@/components/loading/ProcessingSteps';
+import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
 import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
@@ -14,11 +14,11 @@ const ScriptGenerationLoading = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   
-  const [steps, setSteps] = useState([
-    { id: 'analyze', label: 'Analyzing Property Data', status: 'active' as const, description: 'Processing property information' },
-    { id: 'generate', label: 'Generating Script', status: 'pending' as const, description: 'Creating engaging video script' },
-    { id: 'optimize', label: 'Optimizing Content', status: 'pending' as const, description: 'Refining script for maximum impact' },
-    { id: 'finalize', label: 'Finalizing Script', status: 'pending' as const, description: 'Preparing script for review' }
+  const [steps, setSteps] = useState<ProcessingStep[]>([
+    { id: 'analyze', label: 'Analyzing Property Data', status: 'active', description: 'Processing property information' },
+    { id: 'generate', label: 'Generating Script', status: 'pending', description: 'Creating engaging video script' },
+    { id: 'optimize', label: 'Optimizing Content', status: 'pending', description: 'Refining script for maximum impact' },
+    { id: 'finalize', label: 'Finalizing Script', status: 'pending', description: 'Preparing script for review' }
   ]);
 
   const loadingMessages = [
@@ -55,19 +55,21 @@ const ScriptGenerationLoading = () => {
   });
 
   const updateStepsBasedOnJob = (job: any) => {
-    const newSteps = [...steps];
-    
-    if (job.status === 'generating_script') {
-      newSteps[0].status = 'completed';
-      newSteps[1].status = 'active';
-    } else if (job.status === 'script_ready') {
-      newSteps.forEach((step, index) => {
-        if (index < 3) step.status = 'completed';
-        else step.status = 'active';
-      });
-    }
-    
-    setSteps(newSteps);
+    setSteps(prevSteps => {
+      const newSteps = [...prevSteps];
+      
+      if (job.status === 'generating_script') {
+        newSteps[0].status = 'completed';
+        newSteps[1].status = 'active';
+      } else if (job.status === 'script_ready') {
+        newSteps.forEach((step, index) => {
+          if (index < 3) step.status = 'completed';
+          else step.status = 'active';
+        });
+      }
+      
+      return newSteps;
+    });
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
 import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
-import { ProcessingSteps } from '@/components/loading/ProcessingSteps';
+import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
 import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
@@ -14,10 +14,10 @@ const SubmissionLoading = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   
-  const [steps, setSteps] = useState([
-    { id: 'submit', label: 'Submitting URL', status: 'active' as const, description: 'Processing your property URL' },
-    { id: 'extract', label: 'Extracting Property Data', status: 'pending' as const, description: 'Analyzing property information' },
-    { id: 'prepare', label: 'Preparing Review', status: 'pending' as const, description: 'Setting up data for review' }
+  const [steps, setSteps] = useState<ProcessingStep[]>([
+    { id: 'submit', label: 'Submitting URL', status: 'active', description: 'Processing your property URL' },
+    { id: 'extract', label: 'Extracting Property Data', status: 'pending', description: 'Analyzing property information' },
+    { id: 'prepare', label: 'Preparing Review', status: 'pending', description: 'Setting up data for review' }
   ]);
 
   const loadingMessages = [
@@ -53,19 +53,21 @@ const SubmissionLoading = () => {
   });
 
   const updateStepsBasedOnJob = (job: any) => {
-    const newSteps = [...steps];
-    
-    // Update steps based on job status
-    if (job.status === 'analyzing') {
-      newSteps[0].status = 'completed';
-      newSteps[1].status = 'active';
-    } else if (job.status === 'reviewing') {
-      newSteps[0].status = 'completed';
-      newSteps[1].status = 'completed';
-      newSteps[2].status = 'active';
-    }
-    
-    setSteps(newSteps);
+    setSteps(prevSteps => {
+      const newSteps = [...prevSteps];
+      
+      // Update steps based on job status
+      if (job.status === 'analyzing') {
+        newSteps[0].status = 'completed';
+        newSteps[1].status = 'active';
+      } else if (job.status === 'reviewing') {
+        newSteps[0].status = 'completed';
+        newSteps[1].status = 'completed';
+        newSteps[2].status = 'active';
+      }
+      
+      return newSteps;
+    });
   };
 
   useEffect(() => {

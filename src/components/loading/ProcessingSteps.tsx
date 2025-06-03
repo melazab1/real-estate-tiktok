@@ -48,3 +48,5 @@ export const ProcessingSteps = ({ steps, className = '' }: ProcessingStepsProps)
     </div>
   );
 };
+
+export type { ProcessingStep };

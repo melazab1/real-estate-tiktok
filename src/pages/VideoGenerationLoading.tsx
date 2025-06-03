@@ -5,7 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
 import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
-import { ProcessingSteps } from '@/components/loading/ProcessingSteps';
+import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
 import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
@@ -14,12 +14,12 @@ const VideoGenerationLoading = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   
-  const [steps, setSteps] = useState([
-    { id: 'voice', label: 'Processing Voice', status: 'active' as const, description: 'Generating AI voiceover' },
-    { id: 'visuals', label: 'Creating Visuals', status: 'pending' as const, description: 'Assembling property images' },
-    { id: 'sync', label: 'Synchronizing Audio & Video', status: 'pending' as const, description: 'Matching voice with visuals' },
-    { id: 'render', label: 'Rendering Final Video', status: 'pending' as const, description: 'Creating your professional video' },
-    { id: 'quality', label: 'Quality Check', status: 'pending' as const, description: 'Ensuring perfect output' }
+  const [steps, setSteps] = useState<ProcessingStep[]>([
+    { id: 'voice', label: 'Processing Voice', status: 'active', description: 'Generating AI voiceover' },
+    { id: 'visuals', label: 'Creating Visuals', status: 'pending', description: 'Assembling property images' },
+    { id: 'sync', label: 'Synchronizing Audio & Video', status: 'pending', description: 'Matching voice with visuals' },
+    { id: 'render', label: 'Rendering Final Video', status: 'pending', description: 'Creating your professional video' },
+    { id: 'quality', label: 'Quality Check', status: 'pending', description: 'Ensuring perfect output' }
   ]);
 
   const loadingMessages = [
@@ -58,25 +58,27 @@ const VideoGenerationLoading = () => {
   });
 
   const updateStepsBasedOnJob = (job: any) => {
-    const newSteps = [...steps];
-    
-    if (job.status === 'generating_video') {
-      // Simulate progress through video generation steps
-      const elapsedTime = Date.now() - Date.now(); // This would be actual elapsed time
-      const progressSteps = Math.floor(progress / 20); // Each step represents ~20% progress
+    setSteps(prevSteps => {
+      const newSteps = [...prevSteps];
       
-      newSteps.forEach((step, index) => {
-        if (index < progressSteps) {
-          step.status = 'completed';
-        } else if (index === progressSteps) {
-          step.status = 'active';
-        }
-      });
-    } else if (job.status === 'completed') {
-      newSteps.forEach(step => step.status = 'completed');
-    }
-    
-    setSteps(newSteps);
+      if (job.status === 'generating_video') {
+        // Simulate progress through video generation steps
+        const elapsedTime = Date.now() - Date.now(); // This would be actual elapsed time
+        const progressSteps = Math.floor(progress / 20); // Each step represents ~20% progress
+        
+        newSteps.forEach((step, index) => {
+          if (index < progressSteps) {
+            step.status = 'completed';
+          } else if (index === progressSteps) {
+            step.status = 'active';
+          }
+        });
+      } else if (job.status === 'completed') {
+        newSteps.forEach(step => step.status = 'completed');
+      }
+      
+      return newSteps;
+    });
   };
 
   useEffect(() => {
