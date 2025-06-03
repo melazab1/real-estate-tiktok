@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { JobService } from '@/services/jobService';
 import { WebhookService } from '@/services/webhookService';
 import { normalizeUrl } from '@/utils/urlValidation';
@@ -33,7 +34,6 @@ export const useJobSubmission = (userId: string | undefined) => {
       console.log('Job created successfully in database');
 
       // Since we can't predict the display_id, we need to fetch the latest job for this user
-      // This is a temporary solution - in a real app you'd want to return the created job
       const { data: latestJob } = await supabase
         .from('jobs')
         .select('*')

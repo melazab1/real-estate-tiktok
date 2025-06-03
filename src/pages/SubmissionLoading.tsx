@@ -11,7 +11,7 @@ import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
 
 const SubmissionLoading = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const navigate = useNavigate();
   
   const [steps, setSteps] = useState<ProcessingStep[]>([
@@ -28,7 +28,7 @@ const SubmissionLoading = () => {
   ];
 
   const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
-    jobId: jobId!,
+    displayId: identifier!,
     expectedStatus: 'reviewing',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
@@ -38,7 +38,7 @@ const SubmissionLoading = () => {
         title: "Success",
         description: "Property data extracted successfully!"
       });
-      navigate(`/job/${jobId}/review`);
+      navigate(`/job/${identifier}/review`);
     },
     onError: (error) => {
       console.error('Polling error:', error);
@@ -47,7 +47,7 @@ const SubmissionLoading = () => {
         description: "There was an issue processing your submission. Redirecting to review page.",
         variant: "destructive"
       });
-      navigate(`/job/${jobId}/review`);
+      navigate(`/job/${identifier}/review`);
     },
     maxDuration: 3 * 60 * 1000 // 3 minutes for submission
   });
@@ -71,10 +71,10 @@ const SubmissionLoading = () => {
   };
 
   useEffect(() => {
-    if (jobId) {
+    if (identifier) {
       startPolling();
     }
-  }, [jobId]);
+  }, [identifier]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

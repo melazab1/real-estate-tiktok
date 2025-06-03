@@ -11,7 +11,7 @@ import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
 
 const ScriptGenerationLoading = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const navigate = useNavigate();
   
   const [steps, setSteps] = useState<ProcessingStep[]>([
@@ -30,7 +30,7 @@ const ScriptGenerationLoading = () => {
   ];
 
   const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
-    jobId: jobId!,
+    displayId: identifier!,
     expectedStatus: 'script_ready',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
@@ -40,7 +40,7 @@ const ScriptGenerationLoading = () => {
         title: "Success",
         description: "Script generated successfully!"
       });
-      navigate(`/job/${jobId}/script`);
+      navigate(`/job/${identifier}/script`);
     },
     onError: (error) => {
       console.error('Polling error:', error);
@@ -49,7 +49,7 @@ const ScriptGenerationLoading = () => {
         description: "There was an issue generating the script. Redirecting to script page.",
         variant: "destructive"
       });
-      navigate(`/job/${jobId}/script`);
+      navigate(`/job/${identifier}/script`);
     },
     maxDuration: 4 * 60 * 1000 // 4 minutes for script generation
   });
@@ -73,10 +73,10 @@ const ScriptGenerationLoading = () => {
   };
 
   useEffect(() => {
-    if (jobId) {
+    if (identifier) {
       startPolling();
     }
-  }, [jobId]);
+  }, [identifier]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">

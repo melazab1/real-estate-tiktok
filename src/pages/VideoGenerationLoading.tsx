@@ -11,7 +11,7 @@ import { useJobPolling } from '@/hooks/useJobPolling';
 import { toast } from '@/hooks/use-toast';
 
 const VideoGenerationLoading = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const navigate = useNavigate();
   
   const [steps, setSteps] = useState<ProcessingStep[]>([
@@ -32,7 +32,7 @@ const VideoGenerationLoading = () => {
   ];
 
   const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
-    jobId: jobId!,
+    displayId: identifier!,
     expectedStatus: 'completed',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
@@ -42,7 +42,7 @@ const VideoGenerationLoading = () => {
         title: "Success",
         description: "Your video has been generated successfully!"
       });
-      navigate(`/job/${jobId}/result`);
+      navigate(`/job/${identifier}/result`);
     },
     onError: (error) => {
       console.error('Polling error:', error);
@@ -51,7 +51,7 @@ const VideoGenerationLoading = () => {
         description: "There was an issue generating the video. Redirecting to result page.",
         variant: "destructive"
       });
-      navigate(`/job/${jobId}/result`);
+      navigate(`/job/${identifier}/result`);
     },
     maxDuration: 8 * 60 * 1000, // 8 minutes for video generation
     baseInterval: 3000 // Poll every 3 seconds for video generation
@@ -82,10 +82,10 @@ const VideoGenerationLoading = () => {
   };
 
   useEffect(() => {
-    if (jobId) {
+    if (identifier) {
       startPolling();
     }
-  }, [jobId]);
+  }, [identifier]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100">

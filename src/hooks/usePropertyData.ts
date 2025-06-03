@@ -5,16 +5,16 @@ import { toast } from '@/hooks/use-toast';
 import type { Property } from '@/types/job';
 import { sanitizePropertyValue } from '@/validation/propertyValidation';
 
-export const usePropertyData = (jobId: string | undefined) => {
+export const usePropertyData = (displayId: string | undefined) => {
   const [property, setProperty] = useState<Property | null>(null);
 
   const fetchProperty = async () => {
-    if (!jobId) return null;
+    if (!displayId) return null;
 
     const { data: propertyData, error: propertyError } = await supabase
       .from('properties')
       .select('*')
-      .eq('job_id', jobId)
+      .eq('display_id', displayId)
       .maybeSingle();
 
     if (!propertyError && propertyData) {
@@ -30,10 +30,10 @@ export const usePropertyData = (jobId: string | undefined) => {
   };
 
   const createDefaultProperty = async () => {
-    if (!jobId) return null;
+    if (!displayId) return null;
 
     const newProperty = {
-      job_id: jobId,
+      display_id: displayId,
       title: 'Beautiful Family Home',
       description: 'Spacious and well-maintained property',
       price: 450000,
@@ -84,7 +84,7 @@ export const usePropertyData = (jobId: string | undefined) => {
   };
 
   const saveProperty = async () => {
-    if (!property || !jobId) return false;
+    if (!property || !displayId) return false;
     
     try {
       const { error } = await supabase
@@ -100,7 +100,7 @@ export const usePropertyData = (jobId: string | undefined) => {
           additional_info: property.additional_info,
           is_visible: property.is_visible
         })
-        .eq('job_id', jobId);
+        .eq('display_id', displayId);
 
       if (error) throw error;
       return true;

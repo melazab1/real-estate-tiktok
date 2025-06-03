@@ -4,16 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import type { PropertyImage } from '@/types/job';
 
-export const useImageUpload = (jobId: string | undefined) => {
+export const useImageUpload = (displayId: string | undefined) => {
   const [images, setImages] = useState<PropertyImage[]>([]);
 
   const fetchImages = async () => {
-    if (!jobId) return [];
+    if (!displayId) return [];
 
     const { data: imagesData, error: imagesError } = await supabase
       .from('property_images')
       .select('*')
-      .eq('job_id', jobId)
+      .eq('display_id', displayId)
       .order('sort_order');
 
     if (!imagesError) {
