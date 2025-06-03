@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Video, Menu, Home, History, Settings, Plus, LogOut } from 'lucide-react';
 
 export const Navigation = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -15,7 +17,7 @@ export const Navigation = () => {
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'New Job', href: '/new-job', icon: Plus },
     { name: 'History', href: '/history', icon: History },
-    { name: 'Webhook Settings', href: '/settings/webhooks', icon: Settings },
+    ...(isAdmin ? [{ name: 'Webhook Settings', href: '/settings/webhooks', icon: Settings }] : []),
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -49,8 +51,8 @@ export const Navigation = () => {
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center">
+          {/* Clickable Logo */}
+          <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
             <Video className="h-8 w-8 text-blue-600 mr-2" />
             <span className="text-xl font-bold">VideoGen</span>
           </Link>
@@ -79,10 +81,10 @@ export const Navigation = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-64">
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center mb-8">
+                  <Link to="/dashboard" className="flex items-center mb-8" onClick={() => setIsOpen(false)}>
                     <Video className="h-6 w-6 text-blue-600 mr-2" />
                     <span className="text-lg font-bold">VideoGen</span>
-                  </div>
+                  </Link>
                   
                   <NavLinks 
                     className="flex flex-col space-y-2 flex-1" 

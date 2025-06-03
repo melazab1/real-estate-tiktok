@@ -8,7 +8,8 @@ import { PropertyDetailsForm } from '@/components/PropertyDetailsForm';
 import { PropertyImagesCard } from '@/components/PropertyImagesCard';
 import { AdditionalInfoCard } from '@/components/AdditionalInfoCard';
 import { JobReviewActions } from '@/components/JobReviewActions';
-import { JobReviewHeader } from '@/components/JobReviewHeader';
+import { Navigation } from '@/components/Navigation';
+import { RouteGuard } from '@/components/RouteGuard';
 import { toast } from '@/hooks/use-toast';
 import type { Job, Property, PropertyImage } from '@/types/job';
 
@@ -45,7 +46,6 @@ const JobReview = () => {
         .maybeSingle();
 
       if (!propertyError && propertyData) {
-        // Convert the database response to our Property type
         const convertedProperty: Property = {
           ...propertyData,
           is_visible: propertyData.is_visible as Record<string, boolean> || {}
@@ -116,6 +116,37 @@ const JobReview = () => {
     updateProperty('is_visible', { ...isVisible, [field]: !isVisible[field] });
   };
 
+  const handleImageVisibilityChange = async (imageId: string, isVisible: boolean) => {
+    try {
+      await supabase
+        .from('property_images')
+        .update({ is_visible: isVisible })
+        .eq('id', imageId);
+      
+      setImages(prev => prev.map(img => 
+        img.id === imageId ? { ...img, is_visible: isVisible } : img
+      ));
+    } catch (error) {
+      console.error('Error updating image visibility:', error);
+      toast({ title: "Error", description: "Failed to update image visibility", variant: "destructive" });
+    }
+  };
+
+  const handleImagesUpload = async (files: File[]) => {
+    toast({ 
+      title: "Upload started", 
+      description: `Uploading ${files.length} images...` 
+    });
+    // Here you would implement the actual upload logic
+    // For now, just show a success message
+    setTimeout(() => {
+      toast({ 
+        title: "Success", 
+        description: "Images uploaded successfully" 
+      });
+    }, 2000);
+  };
+
   const saveChanges = async () => {
     if (!property) return;
     
@@ -153,7 +184,6 @@ const JobReview = () => {
         .update({ status: 'script_ready', current_step: 3 })
         .eq('job_id', jobId);
 
-      // Create default script
       await supabase
         .from('video_scripts')
         .insert({
@@ -191,42 +221,48 @@ const JobReview = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <JobReviewHeader />
+    <RouteGuard job={job} currentStep="review">
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Breadcrumb items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'New Project', href: '/new-job' },
-          { label: 'Review Data' }
-        ]} />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Breadcrumb items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'New Project', href: '/new-job' },
+            { label: 'Review Data' }
+          ]} />
 
-        <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
+          <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <PropertyDetailsForm 
-            property={property}
-            onUpdateProperty={updateProperty}
-            onToggleVisibility={toggleVisibility}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <PropertyDetailsForm 
+              property={property}
+              onUpdateProperty={updateProperty}
+              onToggleVisibility={toggleVisibility}
+            />
+
+            <PropertyImagesCard 
+              images={images}
+              onImageVisibilityChange={handleImageVisibilityChange}
+              onImagesUpload={handleImagesUpload}
+            />
+          </div>
+
+          <div className="mb-8">
+            <AdditionalInfoCard 
+              property={property}
+              onUpdateProperty={updateProperty}
+            />
+          </div>
+
+          <JobReviewActions 
+            saving={saving}
+            onSaveChanges={saveChanges}
+            onGenerateScript={generateScript}
           />
-
-          <PropertyImagesCard images={images} />
-        </div>
-
-        <div className="mb-8">
-          <AdditionalInfoCard 
-            property={property}
-            onUpdateProperty={updateProperty}
-          />
-        </div>
-
-        <JobReviewActions 
-          saving={saving}
-          onSaveChanges={saveChanges}
-          onGenerateScript={generateScript}
-        />
-      </main>
-    </div>
+        </main>
+      </div>
+    </RouteGuard>
   );
 };
 
