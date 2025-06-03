@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Globe } from 'lucide-react';
 
 interface NewJobFormProps {
   propertyUrl: string;
@@ -20,9 +20,12 @@ export const NewJobForm = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create New Video Project</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          Create New Video Project
+        </CardTitle>
         <CardDescription>
-          Enter a property listing URL to get started. We support Zillow, Realtor.com, Redfin, and other major real estate sites.
+          Enter any property listing URL to get started. We accept URLs from all major real estate websites.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -33,15 +36,22 @@ export const NewJobForm = ({
             </label>
             <Input
               id="url"
-              type="url"
+              type="text"
               value={propertyUrl}
               onChange={(e) => setPropertyUrl(e.target.value)}
-              placeholder="https://www.zillow.com/homedetails/..."
+              placeholder="www.zillow.com/homedetails/... or any property URL"
               className="w-full"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Paste the URL of any property listing from supported real estate websites
-            </p>
+            <div className="text-sm text-gray-500 mt-2">
+              <p className="mb-1">✓ Accepts any real estate website URL</p>
+              <p className="mb-1">✓ Examples:</p>
+              <ul className="list-disc list-inside text-xs ml-2 space-y-0.5">
+                <li>zillow.com/homedetails/123</li>
+                <li>www.realtor.com/property/456</li>
+                <li>redfin.com/property/789</li>
+                <li>trulia.com/listing/abc</li>
+              </ul>
+            </div>
           </div>
 
           <Button 
@@ -50,10 +60,10 @@ export const NewJobForm = ({
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              'Analyzing Property...'
+              'Getting Property Information...'
             ) : (
               <>
-                Analyze Property
+                Get Property Information
                 <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}

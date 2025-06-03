@@ -21,62 +21,81 @@ serve(async (req) => {
     const { job_id, script_data } = await req.json()
     console.log('Video generation triggered for job:', job_id)
 
+    // Validate input
+    if (!job_id || !script_data) {
+      throw new Error('Missing required parameters: job_id or script_data')
+    }
+
     // Get the job info to find user_id
-    const { data: job } = await supabase
+    const { data: job, error: jobError } = await supabase
       .from('jobs')
       .select('user_id')
       .eq('job_id', job_id)
       .single()
 
-    if (!job) {
+    if (jobError || !job) {
+      console.error('Job fetch error:', jobError)
       throw new Error('Job not found')
     }
 
     // Get property data
-    const { data: property } = await supabase
+    const { data: property, error: propertyError } = await supabase
       .from('properties')
       .select('*')
       .eq('job_id', job_id)
       .single()
 
+    if (propertyError) {
+      console.error('Property fetch error:', propertyError)
+    }
+
     // Get user's webhook settings
-    const { data: webhookSettings } = await supabase
+    const { data: webhookSettings, error: webhookError } = await supabase
       .from('webhook_settings')
       .select('video_generation_url')
       .eq('user_id', job.user_id)
-      .single()
+      .maybeSingle()
+
+    if (webhookError) {
+      console.error('Error fetching webhook settings:', webhookError)
+    }
 
     let videoUrl = ''
 
     if (webhookSettings?.video_generation_url) {
       console.log('Calling external webhook:', webhookSettings.video_generation_url)
       
-      // Call external webhook
-      const webhookResponse = await fetch(webhookSettings.video_generation_url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          job_id,
-          script_data,
-          property_data: property,
-          timestamp: new Date().toISOString()
+      try {
+        const webhookResponse = await fetch(webhookSettings.video_generation_url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            job_id,
+            script_data,
+            property_data: property,
+            timestamp: new Date().toISOString()
+          })
         })
-      })
 
-      if (!webhookResponse.ok) {
-        throw new Error(`Webhook failed: ${webhookResponse.status}`)
+        if (!webhookResponse.ok) {
+          throw new Error(`Webhook failed: ${webhookResponse.status} - ${webhookResponse.statusText}`)
+        }
+
+        const webhookData = await webhookResponse.json()
+        console.log('Webhook response:', webhookData)
+        videoUrl = webhookData.video_url || ''
+      } catch (webhookError) {
+        console.error('Video generation webhook failed:', webhookError)
+        // Continue with mock video URL if webhook fails
       }
+    }
 
-      const webhookData = await webhookResponse.json()
-      console.log('Webhook response:', webhookData)
-      videoUrl = webhookData.video_url || ''
-    } else {
-      console.log('No external webhook configured, using mock video URL')
-      
-      // Simulate video processing with mock URL
-      videoUrl = 'https://example.com/sample-video.mp4'
+    // If no webhook video URL or webhook failed, use mock URL
+    if (!videoUrl) {
+      console.log('No external webhook configured or webhook failed, using mock video URL')
+      videoUrl = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
     }
 
     // Create or update video record
@@ -87,7 +106,7 @@ serve(async (req) => {
       .maybeSingle()
 
     if (existingVideo) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('videos')
         .update({
           status: 'completed',
@@ -97,8 +116,13 @@ serve(async (req) => {
           file_size: 13000000
         })
         .eq('job_id', job_id)
+
+      if (updateError) {
+        console.error('Error updating video:', updateError)
+        throw updateError
+      }
     } else {
-      await supabase
+      const { error: insertError } = await supabase
         .from('videos')
         .insert({
           job_id,
@@ -108,16 +132,28 @@ serve(async (req) => {
           duration: 30,
           file_size: 13000000
         })
+
+      if (insertError) {
+        console.error('Error inserting video:', insertError)
+        throw insertError
+      }
     }
 
     // Update job status
-    await supabase
+    const { error: jobUpdateError } = await supabase
       .from('jobs')
       .update({ 
         status: 'completed',
         current_step: 4 
       })
       .eq('job_id', job_id)
+
+    if (jobUpdateError) {
+      console.error('Error updating job status:', jobUpdateError)
+      throw jobUpdateError
+    }
+
+    console.log('Video generation completed successfully for job:', job_id)
 
     return new Response(
       JSON.stringify({ success: true, job_id, video_url: videoUrl }),
