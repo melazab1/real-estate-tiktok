@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +8,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { Navigation } from '@/components/Navigation';
 import { RouteGuard } from '@/components/RouteGuard';
-import { Video, Download, RotateCcw, Clock, HardDrive, Share2, Play } from 'lucide-react';
+import { Video, Download, RotateCcw, Clock, HardDrive, Share2, Play, Edit } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Video as VideoType, Job } from '@/types/job';
 
