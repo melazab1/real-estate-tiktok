@@ -94,7 +94,7 @@ export const useNewJob = () => {
       
       console.log('Creating job with normalized URL:', normalizedUrl, 'Job ID:', jobId);
       
-      // Insert job first
+      // Insert job - this will automatically trigger the property extraction Edge Function via database trigger
       const { error: jobError } = await supabase
         .from('jobs')
         .insert({
@@ -110,28 +110,7 @@ export const useNewJob = () => {
         throw jobError;
       }
 
-      console.log('Job created successfully, now calling property extraction edge function');
-
-      // Call the property extraction edge function directly
-      try {
-        const { data: extractionData, error: extractionError } = await supabase.functions.invoke('property-extraction', {
-          body: {
-            job_id: jobId,
-            property_url: normalizedUrl,
-            user_id: user.id
-          }
-        });
-
-        if (extractionError) {
-          console.error('Property extraction error:', extractionError);
-          // Don't throw here - the job was created successfully, extraction can be retried
-        } else {
-          console.log('Property extraction completed:', extractionData);
-        }
-      } catch (extractionError) {
-        console.error('Failed to call property extraction function:', extractionError);
-        // Don't throw here - the job was created successfully
-      }
+      console.log('Job created successfully - database trigger will automatically call property extraction');
 
       toast({ 
         title: "Success", 
