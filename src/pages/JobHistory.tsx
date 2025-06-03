@@ -19,11 +19,11 @@ interface Job {
   property_url: string | null;
   created_at: string;
   current_step: number;
-  properties?: {
+  properties: {
     title: string | null;
     location: string | null;
-  };
-  videos?: {
+  }[];
+  videos: {
     video_url: string | null;
     thumbnail_url: string | null;
     status: string;
@@ -88,8 +88,9 @@ export const JobHistory = () => {
   };
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.properties?.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const firstProperty = job.properties?.[0];
+    const matchesSearch = firstProperty?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         firstProperty?.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.job_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -203,52 +204,57 @@ export const JobHistory = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredJobs.map((job) => (
-                      <TableRow key={job.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {job.properties?.title || 'Untitled Property'}
+                    {filteredJobs.map((job) => {
+                      const firstProperty = job.properties?.[0];
+                      const firstVideo = job.videos?.[0];
+                      
+                      return (
+                        <TableRow key={job.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">
+                                {firstProperty?.title || 'Untitled Property'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {firstProperty?.location || 'No location'}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {job.properties?.location || 'No location'}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {job.job_id}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(job.status)}>
+                              {job.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center text-sm text-gray-500">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {format(new Date(job.created_at), 'MMM dd, yyyy')}
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {job.job_id}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(job.status)}>
-                            {job.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {format(new Date(job.created_at), 'MMM dd, yyyy')}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link to={`/job/${job.job_id}/review`}>
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Link>
-                            </Button>
-                            {job.videos && job.videos.length > 0 && job.videos[0].video_url && (
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
                               <Button variant="outline" size="sm" asChild>
-                                <a href={job.videos[0].video_url} download>
-                                  <Download className="h-4 w-4 mr-1" />
-                                  Download
-                                </a>
+                                <Link to={`/job/${job.job_id}/review`}>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Link>
                               </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              {firstVideo?.video_url && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={firstVideo.video_url} download>
+                                    <Download className="h-4 w-4 mr-1" />
+                                    Download
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
