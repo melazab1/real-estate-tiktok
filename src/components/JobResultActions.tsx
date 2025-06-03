@@ -5,7 +5,7 @@ import type { Video as VideoType } from '@/types/job';
 
 interface JobResultActionsProps {
   video: VideoType;
-  jobId: string;
+  displayId: string;
   onEditScript: () => void;
   onCreateAnother: () => void;
 }

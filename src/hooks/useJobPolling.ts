@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Job } from '@/types/job';
 
 interface UseJobPollingOptions {
-  jobId: string;
+  displayId: string;
   expectedStatus?: string;
   onStatusChange?: (job: Job) => void;
   onComplete?: (job: Job) => void;
@@ -14,7 +14,7 @@ interface UseJobPollingOptions {
 }
 
 export const useJobPolling = ({
-  jobId,
+  displayId,
   expectedStatus,
   onStatusChange,
   onComplete,
@@ -67,7 +67,7 @@ export const useJobPolling = ({
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
-        .eq('job_id', jobId)
+        .eq('display_id', displayId)
         .single();
 
       if (error) throw error;

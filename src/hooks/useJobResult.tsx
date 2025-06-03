@@ -6,23 +6,23 @@ import { toast } from '@/hooks/use-toast';
 import type { Video as VideoType, Job } from '@/types/job';
 
 export const useJobResult = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const [loading, setLoading] = useState(true);
   const [video, setVideo] = useState<VideoType | null>(null);
   const [job, setJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    if (jobId) {
+    if (identifier) {
       fetchVideoData();
     }
-  }, [jobId]);
+  }, [identifier]);
 
   const fetchVideoData = async () => {
     try {
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .select('*')
-        .eq('job_id', jobId)
+        .eq('display_id', identifier)
         .single();
 
       if (jobError) throw jobError;
@@ -31,7 +31,7 @@ export const useJobResult = () => {
       const { data: videoData, error: videoError } = await supabase
         .from('videos')
         .select('*')
-        .eq('job_id', jobId)
+        .eq('display_id', identifier)
         .maybeSingle();
 
       if (!videoError && videoData) {
@@ -40,7 +40,7 @@ export const useJobResult = () => {
         // Simulate video processing
         const mockVideo: VideoType = {
           id: crypto.randomUUID(),
-          job_id: jobId!,
+          display_id: identifier!,
           video_url: null,
           thumbnail_url: null,
           status: 'processing',
@@ -72,7 +72,7 @@ export const useJobResult = () => {
   };
 
   return {
-    jobId,
+    identifier,
     loading,
     video,
     job

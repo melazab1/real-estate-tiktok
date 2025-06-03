@@ -9,7 +9,7 @@ import { useWebhookIntegration } from './useWebhookIntegration';
 import type { Job } from '@/types/job';
 
 export const useJobReview = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [job, setJob] = useState<Job | null>(null);
@@ -22,22 +22,22 @@ export const useJobReview = () => {
     updateProperty,
     toggleVisibility,
     saveProperty
-  } = usePropertyData(jobId);
+  } = usePropertyData(identifier);
 
   const {
     images,
     fetchImages,
     handleImageVisibilityChange,
     handleImagesUpload
-  } = useImageUpload(jobId);
+  } = useImageUpload(identifier);
 
-  const { generateScript } = useWebhookIntegration(jobId);
+  const { generateScript } = useWebhookIntegration(identifier);
 
   useEffect(() => {
-    if (jobId) {
+    if (identifier) {
       fetchJobData();
     }
-  }, [jobId]);
+  }, [identifier]);
 
   const fetchJobData = async () => {
     try {
@@ -45,7 +45,7 @@ export const useJobReview = () => {
       const { data: jobData, error: jobError } = await supabase
         .from('jobs')
         .select('*')
-        .eq('job_id', jobId)
+        .eq('display_id', identifier)
         .single();
 
       if (jobError) throw jobError;

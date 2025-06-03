@@ -6,27 +6,27 @@ import { WebhookService } from '@/services/webhookService';
 import { useAuth } from '@/hooks/useAuth';
 import type { Property } from '@/types/job';
 
-export const useWebhookIntegration = (jobId: string | undefined) => {
+export const useWebhookIntegration = (displayId: string | undefined) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const generateScript = async (property: Property | null) => {
-    if (!user || !property || !jobId) return;
+    if (!user || !property || !displayId) return;
 
     try {
       // Update job status first
       await supabase
         .from('jobs')
         .update({ status: 'generating_script', current_step: 3 })
-        .eq('job_id', jobId);
+        .eq('display_id', displayId);
 
       // Navigate to loading page immediately
-      navigate(`/job/${jobId}/script-generation-loading`);
+      navigate(`/job/${displayId}/script-generation-loading`);
 
       console.log('Calling script generation webhook with property data:', property);
 
       // Call script generation webhook
-      const webhookResult = await WebhookService.callScriptGeneration(jobId, property, user.id);
+      const webhookResult = await WebhookService.callScriptGeneration(displayId, property, user.id);
       
       if (!webhookResult.success) {
         console.error('Script generation webhook failed:', webhookResult.error);
@@ -35,7 +35,7 @@ export const useWebhookIntegration = (jobId: string | undefined) => {
         await supabase
           .from('video_scripts')
           .insert({
-            job_id: jobId,
+            display_id: displayId,
             script_text: `Welcome to this stunning ${property?.bedrooms}-bedroom, ${property?.bathrooms}-bathroom home located in ${property?.location}. This beautiful property offers ${property?.area} square feet of living space, perfect for families looking for comfort and style. With its modern amenities and prime location, this home is truly a gem in today's market.`,
             language: 'English',
             accent: 'US',
@@ -55,7 +55,7 @@ export const useWebhookIntegration = (jobId: string | undefined) => {
       await supabase
         .from('jobs')
         .update({ status: 'script_ready', current_step: 3 })
-        .eq('job_id', jobId);
+        .eq('display_id', displayId);
 
     } catch (error) {
       console.error('Error generating script:', error);

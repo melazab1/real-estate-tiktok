@@ -3,11 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import type { VideoScript } from '@/types/job';
 
 export class ScriptService {
-  static async fetchScript(jobId: string): Promise<VideoScript | null> {
+  static async fetchScript(displayId: string): Promise<VideoScript | null> {
     const { data, error } = await supabase
       .from('video_scripts')
       .select('*')
-      .eq('job_id', jobId)
+      .eq('display_id', displayId)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
@@ -16,7 +16,7 @@ export class ScriptService {
     if (!data) {
       return {
         id: '',
-        job_id: jobId,
+        display_id: displayId,
         script_text: '',
         language: 'English',
         accent: 'US',
@@ -30,7 +30,7 @@ export class ScriptService {
     return data;
   }
 
-  static async saveScript(jobId: string, script: VideoScript, isNew: boolean): Promise<void> {
+  static async saveScript(displayId: string, script: VideoScript, isNew: boolean): Promise<void> {
     const scriptData = {
       script_text: script.script_text,
       language: script.language,
@@ -43,7 +43,7 @@ export class ScriptService {
       const { error } = await supabase
         .from('video_scripts')
         .insert({
-          job_id: jobId,
+          display_id: displayId,
           ...scriptData
         });
       if (error) throw error;
@@ -52,30 +52,30 @@ export class ScriptService {
       const { error } = await supabase
         .from('video_scripts')
         .update(scriptData)
-        .eq('job_id', jobId);
+        .eq('display_id', displayId);
       if (error) throw error;
     }
   }
 
-  static async approveScript(jobId: string): Promise<void> {
+  static async approveScript(displayId: string): Promise<void> {
     await supabase
       .from('video_scripts')
       .update({ is_approved: true })
-      .eq('job_id', jobId);
+      .eq('display_id', displayId);
   }
 
-  static async updateJobStatus(jobId: string, status: string, currentStep: number): Promise<void> {
+  static async updateJobStatus(displayId: string, status: string, currentStep: number): Promise<void> {
     await supabase
       .from('jobs')
       .update({ status, current_step: currentStep })
-      .eq('job_id', jobId);
+      .eq('display_id', displayId);
   }
 
-  static async createVideoRecord(jobId: string): Promise<void> {
+  static async createVideoRecord(displayId: string): Promise<void> {
     await supabase
       .from('videos')
       .insert({
-        job_id: jobId,
+        display_id: displayId,
         status: 'processing'
       });
   }

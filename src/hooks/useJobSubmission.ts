@@ -24,29 +24,36 @@ export const useJobSubmission = (userId: string | undefined) => {
     setIsSubmitting(true);
     
     try {
-      const jobId = JobService.generateJobId();
       const normalizedUrl = normalizeUrl(propertyUrl);
       
-      console.log('Creating job with normalized URL:', normalizedUrl, 'Job ID:', jobId);
+      console.log('Creating job with normalized URL:', normalizedUrl);
       
-      // Create job record first
-      await JobService.createJob(jobId, userId, normalizedUrl);
+      // Create job record first - display_id will be auto-generated
+      await JobService.createJob('', userId, normalizedUrl);
       console.log('Job created successfully in database');
 
-      // Fetch the created job to get the display_id
-      const createdJob = await JobService.getJobByJobId(jobId);
-      if (!createdJob) {
+      // Since we can't predict the display_id, we need to fetch the latest job for this user
+      // This is a temporary solution - in a real app you'd want to return the created job
+      const { data: latestJob } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!latestJob) {
         throw new Error('Failed to retrieve created job');
       }
 
-      const jobIdentifier = getJobIdentifier(createdJob);
+      const jobIdentifier = getJobIdentifier(latestJob);
 
       // Navigate to loading page immediately for better UX
       navigate(`/job/${jobIdentifier}/submission-loading`);
 
       // Call property extraction webhook in background
       console.log('Calling property extraction webhook');
-      const webhookResult = await WebhookService.callPropertyExtraction(jobId, normalizedUrl, userId);
+      const webhookResult = await WebhookService.callPropertyExtraction(latestJob.display_id, normalizedUrl, userId);
       
       if (!webhookResult.success) {
         console.error('Property extraction webhook failed:', webhookResult.error);

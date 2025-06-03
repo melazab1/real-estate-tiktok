@@ -1,8 +1,7 @@
 
 export interface Job {
   id: string;
-  job_id: string;
-  display_id?: string | null;
+  display_id: string;
   user_id: string;
   property_url: string | null;
   status: string | null;
@@ -22,7 +21,7 @@ export interface Job {
 
 export interface Property {
   id: string;
-  job_id: string;
+  display_id: string;
   title: string | null;
   description: string | null;
   price: number | null;
@@ -38,7 +37,7 @@ export interface Property {
 
 export interface PropertyImage {
   id: string;
-  job_id: string;
+  display_id: string;
   image_url: string;
   sort_order: number | null;
   is_visible: boolean | null;
@@ -47,7 +46,7 @@ export interface PropertyImage {
 
 export interface VideoScript {
   id: string;
-  job_id: string;
+  display_id: string;
   script_text: string | null;
   language: string | null;
   accent: string | null;
@@ -59,7 +58,7 @@ export interface VideoScript {
 
 export interface Video {
   id: string;
-  job_id: string;
+  display_id: string;
   video_url: string | null;
   thumbnail_url: string | null;
   status: string | null;

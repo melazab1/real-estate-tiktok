@@ -30,7 +30,7 @@ const JobResult = () => {
     <RouteGuard job={job} currentStep="result">
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <JobResultContent video={video} jobId={job.job_id} />
+        <JobResultContent video={video} displayId={job.display_id} />
       </div>
     </RouteGuard>
   );

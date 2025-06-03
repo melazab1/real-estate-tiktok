@@ -11,7 +11,7 @@ import { JobScriptError } from '@/components/JobScriptError';
 import { useJobScript } from '@/hooks/useJobScript';
 
 const JobScript = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { identifier } = useParams<{ identifier: string }>();
   const {
     loading,
     saving,
@@ -19,7 +19,7 @@ const JobScript = () => {
     updateScript,
     saveScript,
     approveAndGenerate
-  } = useJobScript(jobId);
+  } = useJobScript(identifier);
 
   if (loading) {
     return <JobScriptLoading />;
@@ -59,7 +59,7 @@ const JobScript = () => {
         <Breadcrumb items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'New Project', href: '/new-job' },
-          { label: 'Review Data', href: `/job/${jobId}/review` },
+          { label: 'Review Data', href: `/job/${identifier}/review` },
           { label: 'Script & Voice' }
         ]} />
 

@@ -4,19 +4,19 @@ import { toast } from '@/hooks/use-toast';
 import { ScriptService } from '@/services/scriptService';
 import type { VideoScript } from '@/types/job';
 
-export const useScriptState = (jobId: string | undefined) => {
+export const useScriptState = (displayId: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const [script, setScript] = useState<VideoScript | null>(null);
 
   useEffect(() => {
-    if (jobId) {
+    if (displayId) {
       fetchScript();
     }
-  }, [jobId]);
+  }, [displayId]);
 
   const fetchScript = async () => {
     try {
-      const scriptData = await ScriptService.fetchScript(jobId!);
+      const scriptData = await ScriptService.fetchScript(displayId!);
       setScript(scriptData);
     } catch (error) {
       console.error('Error fetching script:', error);

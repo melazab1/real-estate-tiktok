@@ -9,10 +9,10 @@ import type { Video as VideoType } from '@/types/job';
 
 interface JobResultContentProps {
   video: VideoType;
-  jobId: string;
+  displayId: string;
 }
 
-export const JobResultContent = ({ video, jobId }: JobResultContentProps) => {
+export const JobResultContent = ({ video, displayId }: JobResultContentProps) => {
   const navigate = useNavigate();
 
   const createAnother = () => {
@@ -24,8 +24,8 @@ export const JobResultContent = ({ video, jobId }: JobResultContentProps) => {
       <Breadcrumb items={[
         { label: 'Dashboard', href: '/dashboard' },
         { label: 'New Video', href: '/new-job' },
-        { label: 'Review Data', href: `/job/${jobId}/review` },
-        { label: 'Script & Voice', href: `/job/${jobId}/script` },
+        { label: 'Review Data', href: `/job/${displayId}/review` },
+        { label: 'Script & Voice', href: `/job/${displayId}/script` },
         { label: 'Video Result' }
       ]} />
 
@@ -39,8 +39,8 @@ export const JobResultContent = ({ video, jobId }: JobResultContentProps) => {
       <div className="mt-8">
         <JobResultActions 
           video={video} 
-          jobId={jobId}
-          onEditScript={() => navigate(`/job/${jobId}/script`)}
+          displayId={displayId}
+          onEditScript={() => navigate(`/job/${displayId}/script`)}
           onCreateAnother={createAnother}
         />
       </div>

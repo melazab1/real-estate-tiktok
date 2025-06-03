@@ -23,7 +23,7 @@ export class WebhookService {
     return data;
   }
 
-  static async callPropertyExtraction(jobId: string, propertyUrl: string, userId: string): Promise<WebhookResponse> {
+  static async callPropertyExtraction(displayId: string, propertyUrl: string, userId: string): Promise<WebhookResponse> {
     try {
       const settings = await this.getUserWebhookSettings(userId);
       
@@ -33,7 +33,7 @@ export class WebhookService {
         // Fallback to Edge Function
         const { data, error } = await supabase.functions.invoke('property-extraction', {
           body: {
-            job_id: jobId,
+            display_id: displayId,
             property_url: propertyUrl,
             user_id: userId
           }
@@ -54,7 +54,7 @@ export class WebhookService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          job_id: jobId,
+          display_id: displayId,
           property_url: propertyUrl,
           user_id: userId,
           timestamp: new Date().toISOString()
@@ -77,7 +77,7 @@ export class WebhookService {
     }
   }
 
-  static async callScriptGeneration(jobId: string, propertyData: any, userId: string): Promise<WebhookResponse> {
+  static async callScriptGeneration(displayId: string, propertyData: any, userId: string): Promise<WebhookResponse> {
     try {
       const settings = await this.getUserWebhookSettings(userId);
       
@@ -87,7 +87,7 @@ export class WebhookService {
         // Fallback to Edge Function
         const { data, error } = await supabase.functions.invoke('script-generation', {
           body: {
-            job_id: jobId,
+            display_id: displayId,
             property_data: propertyData
           }
         });
@@ -107,7 +107,7 @@ export class WebhookService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          job_id: jobId,
+          display_id: displayId,
           property_data: propertyData,
           user_id: userId,
           timestamp: new Date().toISOString()
@@ -130,7 +130,7 @@ export class WebhookService {
     }
   }
 
-  static async callVideoGeneration(jobId: string, scriptData: any, userId: string): Promise<WebhookResponse> {
+  static async callVideoGeneration(displayId: string, scriptData: any, userId: string): Promise<WebhookResponse> {
     try {
       const settings = await this.getUserWebhookSettings(userId);
       
@@ -140,7 +140,7 @@ export class WebhookService {
         // Fallback to Edge Function
         const { data, error } = await supabase.functions.invoke('video-generation', {
           body: {
-            job_id: jobId,
+            display_id: displayId,
             script_data: scriptData
           }
         });
@@ -160,7 +160,7 @@ export class WebhookService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          job_id: jobId,
+          display_id: displayId,
           script_data: scriptData,
           user_id: userId,
           timestamp: new Date().toISOString()
