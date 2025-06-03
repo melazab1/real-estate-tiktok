@@ -25,31 +25,31 @@ export const NewJobForm = ({
           Create New Video Project
         </CardTitle>
         <CardDescription>
-          Enter any property listing URL to get started. We accept URLs from all major real estate websites.
+          Enter any HTTP/HTTPS URL to get started. We accept URLs from any website.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-              Property Listing URL
+              Website URL
             </label>
             <Input
               id="url"
               type="text"
               value={propertyUrl}
               onChange={(e) => setPropertyUrl(e.target.value)}
-              placeholder="www.zillow.com/homedetails/... or any property URL"
+              placeholder="https://example.com or www.example.com"
               className="w-full"
             />
             <div className="text-sm text-gray-500 mt-2">
-              <p className="mb-1">✓ Accepts any real estate website URL</p>
+              <p className="mb-1">✓ Accepts any HTTP/HTTPS URL</p>
               <p className="mb-1">✓ Examples:</p>
               <ul className="list-disc list-inside text-xs ml-2 space-y-0.5">
-                <li>zillow.com/homedetails/123</li>
-                <li>www.realtor.com/property/456</li>
-                <li>redfin.com/property/789</li>
-                <li>trulia.com/listing/abc</li>
+                <li>https://example.com</li>
+                <li>www.example.com</li>
+                <li>http://website.org/page</li>
+                <li>subdomain.example.com</li>
               </ul>
             </div>
           </div>
@@ -60,10 +60,10 @@ export const NewJobForm = ({
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              'Getting Property Information...'
+              'Processing URL...'
             ) : (
               <>
-                Get Property Information
+                Process URL
                 <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}

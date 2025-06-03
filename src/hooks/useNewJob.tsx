@@ -22,7 +22,12 @@ export const useNewJob = () => {
       // Create URL object to validate format
       const urlObj = new URL(normalizedUrl);
       
-      // Basic validation: must have valid domain
+      // Must use HTTP or HTTPS protocol
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return false;
+      }
+      
+      // Must have valid domain
       if (!urlObj.hostname || urlObj.hostname.length < 3) {
         return false;
       }
@@ -51,14 +56,14 @@ export const useNewJob = () => {
     if (!user) return;
 
     if (!propertyUrl.trim()) {
-      toast({ title: "Error", description: "Please enter a property URL", variant: "destructive" });
+      toast({ title: "Error", description: "Please enter a URL", variant: "destructive" });
       return;
     }
 
     if (!validateUrl(propertyUrl)) {
       toast({ 
         title: "Invalid URL", 
-        description: "Please enter a valid URL format (e.g., www.example.com/property or https://example.com/listing)", 
+        description: "Please enter a valid HTTP/HTTPS URL (e.g., https://example.com or www.example.com)", 
         variant: "destructive" 
       });
       return;
@@ -90,7 +95,7 @@ export const useNewJob = () => {
 
       toast({ 
         title: "Success", 
-        description: "Property submitted successfully! We're getting the property information now." 
+        description: "URL submitted successfully! We're getting the information now." 
       });
       
       // Navigate to review page where user can watch the progress
@@ -99,7 +104,7 @@ export const useNewJob = () => {
       console.error('Error creating job:', error);
       toast({ 
         title: "Error", 
-        description: "Failed to submit property. Please try again.", 
+        description: "Failed to submit URL. Please try again.", 
         variant: "destructive" 
       });
     } finally {
