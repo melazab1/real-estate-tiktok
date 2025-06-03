@@ -11,7 +11,14 @@ export const useJobSubmission = (userId: string | undefined) => {
   const navigate = useNavigate();
 
   const submitJob = async (propertyUrl: string): Promise<void> => {
-    if (!userId) return;
+    if (!userId) {
+      toast({ 
+        title: "Authentication Required", 
+        description: "Please log in to submit a URL.", 
+        variant: "destructive" 
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     
@@ -21,19 +28,19 @@ export const useJobSubmission = (userId: string | undefined) => {
       
       console.log('Creating job with normalized URL:', normalizedUrl, 'Job ID:', jobId);
       
-      // Create job record
+      // Create job record first
       await JobService.createJob(jobId, userId, normalizedUrl);
+      console.log('Job created successfully in database');
 
-      console.log('Job created successfully, calling property extraction webhook');
-
-      // Call property extraction webhook directly
+      // Call property extraction webhook
+      console.log('Calling property extraction webhook');
       const webhookResult = await WebhookService.callPropertyExtraction(jobId, normalizedUrl, userId);
       
       if (!webhookResult.success) {
         console.error('Property extraction webhook failed:', webhookResult.error);
         toast({ 
           title: "Processing Started with Warning", 
-          description: "URL submitted but there was an issue with property extraction. You can retry from the review page.", 
+          description: "URL submitted successfully, but there was an issue with property extraction. You can retry from the review page.", 
           variant: "destructive" 
         });
       } else {
@@ -48,9 +55,23 @@ export const useJobSubmission = (userId: string | undefined) => {
       navigate(`/job/${jobId}/review`);
     } catch (error) {
       console.error('Error creating job:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to submit URL. Please try again.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message.includes('duplicate')) {
+          errorMessage = "This job already exists. Please try a different URL.";
+        } else if (error.message.includes('permission')) {
+          errorMessage = "Permission denied. Please log in and try again.";
+        }
+      }
+      
       toast({ 
         title: "Error", 
-        description: "Failed to submit URL. Please try again.", 
+        description: errorMessage, 
         variant: "destructive" 
       });
     } finally {
