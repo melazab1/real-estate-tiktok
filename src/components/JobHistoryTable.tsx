@@ -5,24 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, Download, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-
-interface Job {
-  id: string;
-  job_id: string;
-  status: string;
-  property_url: string | null;
-  created_at: string;
-  current_step: number;
-  properties: {
-    title: string | null;
-    location: string | null;
-  }[];
-  videos: {
-    video_url: string | null;
-    thumbnail_url: string | null;
-    status: string;
-  }[];
-}
+import { Job } from '@/types/job';
 
 interface JobHistoryTableProps {
   jobs: Job[];
@@ -75,14 +58,14 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
                   {job.job_id}
                 </TableCell>
                 <TableCell>
-                  <Badge className={getStatusColor(job.status)}>
+                  <Badge className={getStatusColor(job.status || 'unknown')}>
                     {job.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center text-sm text-gray-500">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {format(new Date(job.created_at), 'MMM dd, yyyy')}
+                    {job.created_at ? format(new Date(job.created_at), 'MMM dd, yyyy') : 'N/A'}
                   </div>
                 </TableCell>
                 <TableCell>
