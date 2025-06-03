@@ -41,6 +41,9 @@ export const useNewJob = () => {
     try {
       const jobId = crypto.randomUUID();
       
+      console.log('Creating job with automatic workflow:', jobId);
+      
+      // Insert job - this will automatically trigger the property extraction Edge Function
       const { error } = await supabase
         .from('jobs')
         .insert({
@@ -53,7 +56,12 @@ export const useNewJob = () => {
 
       if (error) throw error;
 
-      toast({ title: "Success", description: "Property submitted for analysis" });
+      toast({ 
+        title: "Success", 
+        description: "Property submitted for analysis. The workflow will execute automatically!" 
+      });
+      
+      // Navigate to review page where user can watch the progress
       navigate(`/job/${jobId}/review`);
     } catch (error) {
       console.error('Error creating job:', error);
