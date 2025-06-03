@@ -10,10 +10,35 @@ export const useImageUpload = (displayId: string | undefined) => {
   const fetchImages = async () => {
     if (!displayId) return [];
 
+    // First get the job to get the job_id
+    const { data: jobData, error: jobError } = await supabase
+      .from('jobs')
+      .select('id')
+      .eq('display_id', displayId)
+      .single();
+
+    if (jobError || !jobData) {
+      console.error('Error fetching job:', jobError);
+      return [];
+    }
+
+    // Then get the property to get the property_id
+    const { data: propertyData, error: propertyError } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('job_id', jobData.id)
+      .maybeSingle();
+
+    if (propertyError || !propertyData) {
+      console.log('No property found for job:', displayId);
+      return [];
+    }
+
+    // Finally get the images using property_id
     const { data: imagesData, error: imagesError } = await supabase
       .from('property_images')
       .select('*')
-      .eq('display_id', displayId)
+      .eq('property_id', propertyData.id)
       .order('sort_order');
 
     if (!imagesError) {

@@ -11,10 +11,23 @@ export const usePropertyData = (displayId: string | undefined) => {
   const fetchProperty = async () => {
     if (!displayId) return null;
 
+    // First get the job to get the job_id
+    const { data: jobData, error: jobError } = await supabase
+      .from('jobs')
+      .select('id')
+      .eq('display_id', displayId)
+      .single();
+
+    if (jobError || !jobData) {
+      console.error('Error fetching job:', jobError);
+      return null;
+    }
+
+    // Then get the property using job_id
     const { data: propertyData, error: propertyError } = await supabase
       .from('properties')
       .select('*')
-      .eq('display_id', displayId)
+      .eq('job_id', jobData.id)
       .maybeSingle();
 
     if (!propertyError && propertyData) {
@@ -32,8 +45,20 @@ export const usePropertyData = (displayId: string | undefined) => {
   const createDefaultProperty = async () => {
     if (!displayId) return null;
 
+    // First get the job to get the job_id
+    const { data: jobData, error: jobError } = await supabase
+      .from('jobs')
+      .select('id')
+      .eq('display_id', displayId)
+      .single();
+
+    if (jobError || !jobData) {
+      console.error('Error fetching job:', jobError);
+      return null;
+    }
+
     const newProperty = {
-      display_id: displayId,
+      job_id: jobData.id,
       title: 'Beautiful Family Home',
       description: 'Spacious and well-maintained property',
       price: 450000,
@@ -100,7 +125,7 @@ export const usePropertyData = (displayId: string | undefined) => {
           additional_info: property.additional_info,
           is_visible: property.is_visible
         })
-        .eq('display_id', displayId);
+        .eq('id', property.id);
 
       if (error) throw error;
       return true;

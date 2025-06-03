@@ -29,11 +29,11 @@ export const JobHistory = () => {
         .from('jobs')
         .select(`
           *,
-          properties (
+          properties!properties_job_id_fkey (
             title,
             location
           ),
-          videos (
+          videos!videos_job_id_fkey (
             video_url,
             thumbnail_url,
             status

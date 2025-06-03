@@ -27,7 +27,7 @@ export const RecentJobs = () => {
         .from('jobs')
         .select(`
           *,
-          properties (
+          properties!properties_job_id_fkey (
             title,
             location
           )
@@ -48,6 +48,7 @@ export const RecentJobs = () => {
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'analyzing': return 'bg-yellow-100 text-yellow-800';
+      case 'reviewing': return 'bg-blue-100 text-blue-800';
       case 'script_ready': return 'bg-blue-100 text-blue-800';
       case 'generating': return 'bg-purple-100 text-purple-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -58,6 +59,7 @@ export const RecentJobs = () => {
   const getStatusLabel = (status: string | null) => {
     switch (status) {
       case 'analyzing': return 'Analyzing';
+      case 'reviewing': return 'Ready for Review';
       case 'script_ready': return 'Script Ready';
       case 'generating': return 'Generating';
       case 'completed': return 'Completed';
@@ -69,6 +71,8 @@ export const RecentJobs = () => {
     const jobIdentifier = getJobIdentifier(job);
     switch (job.status) {
       case 'analyzing':
+        return { label: 'Review Data', href: `/job/${jobIdentifier}/review` };
+      case 'reviewing':
         return { label: 'Review Data', href: `/job/${jobIdentifier}/review` };
       case 'script_ready':
         return { label: 'Edit Script', href: `/job/${jobIdentifier}/script` };

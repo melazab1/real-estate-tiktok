@@ -77,9 +77,9 @@ export type Database = {
           bedrooms: number | null
           created_at: string | null
           description: string | null
-          display_id: string
           id: string
           is_visible: Json | null
+          job_id: string | null
           location: string | null
           price: number | null
           title: string | null
@@ -92,9 +92,9 @@ export type Database = {
           bedrooms?: number | null
           created_at?: string | null
           description?: string | null
-          display_id: string
           id?: string
           is_visible?: Json | null
+          job_id?: string | null
           location?: string | null
           price?: number | null
           title?: string | null
@@ -107,9 +107,9 @@ export type Database = {
           bedrooms?: number | null
           created_at?: string | null
           description?: string | null
-          display_id?: string
           id?: string
           is_visible?: Json | null
+          job_id?: string | null
           location?: string | null
           price?: number | null
           title?: string | null
@@ -117,46 +117,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "properties_display_id_fkey"
-            columns: ["display_id"]
+            foreignKeyName: "properties_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
-            referencedColumns: ["display_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       property_images: {
         Row: {
-          display_id: string
           id: string
           image_url: string
           is_visible: boolean | null
+          property_id: string | null
           sort_order: number | null
           uploaded_at: string | null
         }
         Insert: {
-          display_id: string
           id?: string
           image_url: string
           is_visible?: boolean | null
+          property_id?: string | null
           sort_order?: number | null
           uploaded_at?: string | null
         }
         Update: {
-          display_id?: string
           id?: string
           image_url?: string
           is_visible?: boolean | null
+          property_id?: string | null
           sort_order?: number | null
           uploaded_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "property_images_display_id_fkey"
-            columns: ["display_id"]
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
             isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["display_id"]
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -212,9 +212,9 @@ export type Database = {
         Row: {
           accent: string | null
           created_at: string | null
-          display_id: string
           id: string
           is_approved: boolean | null
+          job_id: string | null
           language: string | null
           script_text: string | null
           updated_at: string | null
@@ -223,9 +223,9 @@ export type Database = {
         Insert: {
           accent?: string | null
           created_at?: string | null
-          display_id: string
           id?: string
           is_approved?: boolean | null
+          job_id?: string | null
           language?: string | null
           script_text?: string | null
           updated_at?: string | null
@@ -234,9 +234,9 @@ export type Database = {
         Update: {
           accent?: string | null
           created_at?: string | null
-          display_id?: string
           id?: string
           is_approved?: boolean | null
+          job_id?: string | null
           language?: string | null
           script_text?: string | null
           updated_at?: string | null
@@ -244,21 +244,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "video_scripts_display_id_fkey"
-            columns: ["display_id"]
+            foreignKeyName: "video_scripts_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
-            referencedColumns: ["display_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       videos: {
         Row: {
           created_at: string | null
-          display_id: string
           duration: number | null
           file_size: number | null
           id: string
+          job_id: string | null
           status: string | null
           thumbnail_url: string | null
           updated_at: string | null
@@ -266,10 +266,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          display_id: string
           duration?: number | null
           file_size?: number | null
           id?: string
+          job_id?: string | null
           status?: string | null
           thumbnail_url?: string | null
           updated_at?: string | null
@@ -277,10 +277,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          display_id?: string
           duration?: number | null
           file_size?: number | null
           id?: string
+          job_id?: string | null
           status?: string | null
           thumbnail_url?: string | null
           updated_at?: string | null
@@ -288,11 +288,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "videos_display_id_fkey"
-            columns: ["display_id"]
+            foreignKeyName: "videos_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
-            referencedColumns: ["display_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
