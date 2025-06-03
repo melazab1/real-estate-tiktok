@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -96,7 +97,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/submission-loading" 
+                path="/job/:identifier/submission-loading" 
                 element={
                   <ProtectedRoute>
                     <SubmissionLoading />
@@ -104,7 +105,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/script-generation-loading" 
+                path="/job/:identifier/script-generation-loading" 
                 element={
                   <ProtectedRoute>
                     <ScriptGenerationLoading />
@@ -112,7 +113,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/video-generation-loading" 
+                path="/job/:identifier/video-generation-loading" 
                 element={
                   <ProtectedRoute>
                     <VideoGenerationLoading />
@@ -120,7 +121,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/review" 
+                path="/job/:identifier/review" 
                 element={
                   <ProtectedRoute>
                     <JobReview />
@@ -128,7 +129,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/script" 
+                path="/job/:identifier/script" 
                 element={
                   <ProtectedRoute>
                     <JobScript />
@@ -136,7 +137,7 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/job/:jobId/result" 
+                path="/job/:identifier/result" 
                 element={
                   <ProtectedRoute>
                     <JobResult />
