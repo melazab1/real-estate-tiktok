@@ -8,6 +8,15 @@ export interface Job {
   current_step: number | null;
   created_at: string | null;
   updated_at: string | null;
+  properties?: {
+    title: string | null;
+    location: string | null;
+  }[];
+  videos?: {
+    video_url: string | null;
+    thumbnail_url: string | null;
+    status: string;
+  }[];
 }
 
 export interface Property {
