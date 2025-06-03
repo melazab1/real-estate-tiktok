@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           created_at: string | null
           current_step: number | null
+          display_id: string
           id: string
           job_id: string
           property_url: string | null
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           current_step?: number | null
+          display_id: string
           id?: string
           job_id: string
           property_url?: string | null
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           current_step?: number | null
+          display_id?: string
           id?: string
           job_id?: string
           property_url?: string | null
@@ -343,6 +346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_display_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: { role_name?: string }
         Returns: boolean

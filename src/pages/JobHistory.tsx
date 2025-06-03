@@ -7,6 +7,7 @@ import { JobHistoryHeader } from '@/components/JobHistoryHeader';
 import { JobHistoryFilters } from '@/components/JobHistoryFilters';
 import { JobHistoryTable } from '@/components/JobHistoryTable';
 import { JobHistoryEmptyState } from '@/components/JobHistoryEmptyState';
+import { getJobIdentifier } from '@/utils/routeUtils';
 import { Job } from '@/types/job';
 
 export const JobHistory = () => {
@@ -55,10 +56,10 @@ export const JobHistory = () => {
 
   const filteredJobs = jobs.filter(job => {
     const firstProperty = job.properties?.[0];
+    const jobIdentifier = getJobIdentifier(job);
     const matchesSearch = firstProperty?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          firstProperty?.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.display_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.job_id.toLowerCase().includes(searchTerm.toLowerCase());
+                         jobIdentifier.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

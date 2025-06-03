@@ -1,9 +1,11 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { JobService } from '@/services/jobService';
 import { WebhookService } from '@/services/webhookService';
 import { normalizeUrl } from '@/utils/urlValidation';
+import { getJobIdentifier } from '@/utils/routeUtils';
 
 export const useJobSubmission = (userId: string | undefined) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,8 +33,16 @@ export const useJobSubmission = (userId: string | undefined) => {
       await JobService.createJob(jobId, userId, normalizedUrl);
       console.log('Job created successfully in database');
 
+      // Fetch the created job to get the display_id
+      const createdJob = await JobService.getJobByJobId(jobId);
+      if (!createdJob) {
+        throw new Error('Failed to retrieve created job');
+      }
+
+      const jobIdentifier = getJobIdentifier(createdJob);
+
       // Navigate to loading page immediately for better UX
-      navigate(`/job/${jobId}/submission-loading`);
+      navigate(`/job/${jobIdentifier}/submission-loading`);
 
       // Call property extraction webhook in background
       console.log('Calling property extraction webhook');

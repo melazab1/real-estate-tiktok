@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, Download, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { getJobIdentifier } from '@/utils/routeUtils';
 import { Job } from '@/types/job';
 
 interface JobHistoryTableProps {
@@ -32,16 +33,16 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
   };
 
   const getViewRoute = (job: Job) => {
-    const jobId = job.display_id || job.job_id;
+    const jobIdentifier = getJobIdentifier(job);
     switch (job.status) {
       case 'completed':
-        return `/job/${jobId}/result`;
+        return `/job/${jobIdentifier}/result`;
       case 'script_ready':
-        return `/job/${jobId}/script`;
+        return `/job/${jobIdentifier}/script`;
       case 'reviewing':
       case 'analyzing':
       default:
-        return `/job/${jobId}/review`;
+        return `/job/${jobIdentifier}/review`;
     }
   };
 
@@ -52,6 +53,7 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
         {jobs.map((job) => {
           const firstProperty = job.properties?.[0];
           const firstVideo = job.videos?.[0];
+          const jobIdentifier = getJobIdentifier(job);
           
           return (
             <div key={job.id} className="bg-white border rounded-lg p-4 space-y-3">
@@ -75,7 +77,7 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
                   {job.created_at ? format(new Date(job.created_at), 'MMM dd, yyyy') : 'N/A'}
                 </div>
                 <div className="font-mono">
-                  {job.display_id || job.job_id}
+                  {jobIdentifier}
                 </div>
               </div>
               
@@ -116,6 +118,7 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
             {jobs.map((job) => {
               const firstProperty = job.properties?.[0];
               const firstVideo = job.videos?.[0];
+              const jobIdentifier = getJobIdentifier(job);
               
               return (
                 <TableRow key={job.id}>
@@ -130,7 +133,7 @@ export const JobHistoryTable = ({ jobs }: JobHistoryTableProps) => {
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">
-                    {job.display_id || job.job_id}
+                    {jobIdentifier}
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(job.status || 'unknown')}>
