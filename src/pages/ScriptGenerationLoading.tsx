@@ -7,7 +7,7 @@ import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
 import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
-import { useJobPolling } from '@/hooks/useJobPolling';
+import { useJobRealtime } from '@/hooks/useJobRealtime';
 import { toast } from '@/hooks/use-toast';
 
 const ScriptGenerationLoading = () => {
@@ -29,54 +29,91 @@ const ScriptGenerationLoading = () => {
     "Almost ready for your review!"
   ];
 
-  const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
+  const {
+    job,
+    loading,
+    progress,
+    detailedStatus,
+    estimatedCompletion,
+    hasError,
+    errorDetails
+  } = useJobRealtime({
     displayId: identifier!,
-    expectedStatus: 'script_ready',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
     },
     onComplete: (job) => {
-      toast({
-        title: "Success",
-        description: "Script generated successfully!"
-      });
-      navigate(`/job/${identifier}/script`);
+      if (job.status === 'script_ready') {
+        toast({
+          title: "Success",
+          description: "Script generated successfully!"
+        });
+        navigate(`/job/${identifier}/script`);
+      } else if (job.status === 'failed') {
+        toast({
+          title: "Error",
+          description: errorDetails || "There was an issue generating the script.",
+          variant: "destructive"
+        });
+        navigate(`/job/${identifier}/script`);
+      }
     },
     onError: (error) => {
-      console.error('Polling error:', error);
+      console.error('Real-time error:', error);
       toast({
         title: "Error",
-        description: "There was an issue generating the script. Redirecting to script page.",
+        description: "Connection error. Redirecting to script page.",
         variant: "destructive"
       });
       navigate(`/job/${identifier}/script`);
-    },
-    maxDuration: 4 * 60 * 1000 // 4 minutes for script generation
+    }
   });
 
   const updateStepsBasedOnJob = (job: any) => {
     setSteps(prevSteps => {
       const newSteps = [...prevSteps];
       
-      if (job.status === 'generating_script') {
-        newSteps[0].status = 'completed';
-        newSteps[1].status = 'active';
-      } else if (job.status === 'script_ready') {
-        newSteps.forEach((step, index) => {
-          if (index < 3) step.status = 'completed';
-          else step.status = 'active';
-        });
-      }
+      // Update steps based on progress percentage
+      const progressSteps = Math.floor(progress / 25); // Each step represents ~25% progress
+      
+      newSteps.forEach((step, index) => {
+        if (index < progressSteps) {
+          step.status = 'completed';
+        } else if (index === progressSteps) {
+          step.status = 'active';
+        } else {
+          step.status = 'pending';
+        }
+      });
       
       return newSteps;
     });
   };
 
-  useEffect(() => {
-    if (identifier) {
-      startPolling();
-    }
-  }, [identifier]);
+  const getEstimatedTime = (): number | null => {
+    if (!estimatedCompletion) return null;
+    const remaining = estimatedCompletion.getTime() - Date.now();
+    return Math.max(0, Math.floor(remaining / 1000));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
+        <LoadingSpinner type="scale" size={15} color="#8B5CF6" className="mb-4" />
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Script Generation Error</h2>
+          <p className="text-gray-600">{errorDetails || "An error occurred while generating the script."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
@@ -92,7 +129,7 @@ const ScriptGenerationLoading = () => {
                 Generating Your Script
               </h1>
               <p className="text-gray-600">
-                Our AI is crafting an engaging script for your property video.
+                {detailedStatus}
               </p>
             </div>
 
@@ -105,7 +142,7 @@ const ScriptGenerationLoading = () => {
               />
               
               <EstimatedTime 
-                timeRemaining={estimatedTimeRemaining}
+                timeRemaining={getEstimatedTime()}
                 className="justify-center"
               />
             </div>

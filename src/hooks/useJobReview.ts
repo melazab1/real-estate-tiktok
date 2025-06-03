@@ -6,15 +6,59 @@ import { toast } from '@/hooks/use-toast';
 import { usePropertyData } from './usePropertyData';
 import { useImageUpload } from './useImageUpload';
 import { useWebhookIntegration } from './useWebhookIntegration';
+import { useJobRealtime } from './useJobRealtime';
 import type { Job } from '@/types/job';
 
 export const useJobReview = () => {
   const { identifier } = useParams<{ identifier: string }>();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [job, setJob] = useState<Job | null>(null);
-  const [jobError, setJobError] = useState<string | null>(null);
   const [propertyLoading, setPropertyLoading] = useState(false);
+
+  // Use the real-time job tracking
+  const {
+    job,
+    loading: jobLoading,
+    error: jobError,
+    progress,
+    detailedStatus,
+    hasError,
+    errorDetails
+  } = useJobRealtime({
+    displayId: identifier!,
+    onStatusChange: (updatedJob) => {
+      console.log('Job status updated:', updatedJob.status, updatedJob.detailed_status);
+      
+      // Show status updates to user
+      if (updatedJob.detailed_status) {
+        toast({
+          title: "Status Update",
+          description: updatedJob.detailed_status
+        });
+      }
+    },
+    onComplete: (completedJob) => {
+      if (completedJob.status === 'completed') {
+        toast({
+          title: "Success",
+          description: "Process completed successfully!"
+        });
+      } else if (completedJob.status === 'failed') {
+        toast({
+          title: "Error",
+          description: errorDetails || "Process failed. Please try again.",
+          variant: "destructive"
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Real-time error:', error);
+      toast({
+        title: "Connection Error",
+        description: "Lost connection to status updates. Please refresh the page.",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Use the focused hooks
   const {
@@ -36,33 +80,13 @@ export const useJobReview = () => {
   const { generateScript } = useWebhookIntegration(identifier);
 
   useEffect(() => {
-    if (identifier) {
-      fetchJobData();
+    if (identifier && job) {
+      fetchPropertyAndImages();
     }
-  }, [identifier]);
+  }, [identifier, job]);
 
-  const fetchJobData = async () => {
+  const fetchPropertyAndImages = async () => {
     try {
-      setLoading(true);
-      setJobError(null);
-      
-      // First, fetch job data
-      console.log('Fetching job data for identifier:', identifier);
-      const { data: jobData, error: jobError } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('display_id', identifier)
-        .single();
-
-      if (jobError) {
-        console.error('Job fetch error:', jobError);
-        setJobError('Job not found');
-        return;
-      }
-
-      console.log('Job found:', jobData);
-      setJob(jobData);
-
       // Try to fetch existing property
       console.log('Fetching property data...');
       const existingProperty = await fetchProperty();
@@ -95,15 +119,12 @@ export const useJobReview = () => {
       }
 
     } catch (error) {
-      console.error('Error in fetchJobData:', error);
-      setJobError('Failed to load job data');
+      console.error('Error in fetchPropertyAndImages:', error);
       toast({ 
         title: "Error", 
-        description: "Failed to load job data", 
+        description: "Failed to load property data", 
         variant: "destructive" 
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -125,13 +146,17 @@ export const useJobReview = () => {
   };
 
   return {
-    loading,
+    loading: jobLoading,
     saving,
     job,
     jobError,
     property,
     propertyLoading,
     images,
+    progress,
+    detailedStatus,
+    hasError,
+    errorDetails,
     updateProperty,
     toggleVisibility,
     handleImageVisibilityChange,

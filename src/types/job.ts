@@ -8,6 +8,13 @@ export interface Job {
   current_step: number | null;
   created_at: string | null;
   updated_at: string | null;
+  // New real-time tracking fields
+  detailed_status: string | null;
+  progress_percentage: number | null;
+  webhook_response: any | null;
+  error_details: string | null;
+  last_updated_at: string | null;
+  estimated_completion: string | null;
   properties?: Property[];
   videos?: Video[];
 }

@@ -20,6 +20,10 @@ const JobReview = () => {
     property,
     propertyLoading,
     images,
+    progress,
+    detailedStatus,
+    hasError,
+    errorDetails,
     updateProperty,
     toggleVisibility,
     handleImageVisibilityChange,
@@ -35,18 +39,25 @@ const JobReview = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading job data...</p>
+          {detailedStatus && (
+            <p className="text-sm text-gray-500 mt-2">{detailedStatus}</p>
+          )}
         </div>
       </div>
     );
   }
 
-  // Show error if job not found
-  if (jobError || !job) {
+  // Show error if job not found or has errors
+  if (jobError || !job || hasError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Not Found</h2>
-          <p className="text-gray-600">The requested job could not be found.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {hasError ? 'Processing Error' : 'Job Not Found'}
+          </h2>
+          <p className="text-gray-600">
+            {errorDetails || jobError || "The requested job could not be found."}
+          </p>
         </div>
       </div>
     );
@@ -72,6 +83,9 @@ const JobReview = () => {
               <LoadingSpinner size={20} className="mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Setting up property data...</h3>
               <p className="text-gray-600">This will only take a moment.</p>
+              {detailedStatus && (
+                <p className="text-sm text-gray-500 mt-2">{detailedStatus}</p>
+              )}
             </div>
           </div>
         </main>
@@ -97,6 +111,9 @@ const JobReview = () => {
           <Alert className="max-w-2xl mx-auto mt-8">
             <AlertDescription>
               Property data could not be loaded. Please try refreshing the page or contact support if the problem persists.
+              {detailedStatus && (
+                <div className="mt-2 text-sm">{detailedStatus}</div>
+              )}
             </AlertDescription>
           </Alert>
         </main>
@@ -118,6 +135,22 @@ const JobReview = () => {
           ]} />
 
           <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
+
+          {/* Show real-time status if available */}
+          {detailedStatus && progress !== undefined && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-800">Status: {detailedStatus}</span>
+                <span className="text-sm text-blue-600">{progress}% Complete</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <PropertyInfoCard 

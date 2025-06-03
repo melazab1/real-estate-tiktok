@@ -7,7 +7,7 @@ import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
 import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
-import { useJobPolling } from '@/hooks/useJobPolling';
+import { useJobRealtime } from '@/hooks/useJobRealtime';
 import { toast } from '@/hooks/use-toast';
 
 const VideoGenerationLoading = () => {
@@ -31,61 +31,91 @@ const VideoGenerationLoading = () => {
     "Your video is almost ready!"
   ];
 
-  const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
+  const {
+    job,
+    loading,
+    progress,
+    detailedStatus,
+    estimatedCompletion,
+    hasError,
+    errorDetails
+  } = useJobRealtime({
     displayId: identifier!,
-    expectedStatus: 'completed',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
     },
     onComplete: (job) => {
-      toast({
-        title: "Success",
-        description: "Your video has been generated successfully!"
-      });
-      navigate(`/job/${identifier}/result`);
+      if (job.status === 'completed') {
+        toast({
+          title: "Success",
+          description: "Your video has been generated successfully!"
+        });
+        navigate(`/job/${identifier}/result`);
+      } else if (job.status === 'failed') {
+        toast({
+          title: "Error",
+          description: errorDetails || "There was an issue generating the video.",
+          variant: "destructive"
+        });
+        navigate(`/job/${identifier}/result`);
+      }
     },
     onError: (error) => {
-      console.error('Polling error:', error);
+      console.error('Real-time error:', error);
       toast({
         title: "Error",
-        description: "There was an issue generating the video. Redirecting to result page.",
+        description: "Connection error. Redirecting to result page.",
         variant: "destructive"
       });
       navigate(`/job/${identifier}/result`);
-    },
-    maxDuration: 8 * 60 * 1000, // 8 minutes for video generation
-    baseInterval: 3000 // Poll every 3 seconds for video generation
+    }
   });
 
   const updateStepsBasedOnJob = (job: any) => {
     setSteps(prevSteps => {
       const newSteps = [...prevSteps];
       
-      if (job.status === 'generating_video') {
-        // Simulate progress through video generation steps
-        const elapsedTime = Date.now() - Date.now(); // This would be actual elapsed time
-        const progressSteps = Math.floor(progress / 20); // Each step represents ~20% progress
-        
-        newSteps.forEach((step, index) => {
-          if (index < progressSteps) {
-            step.status = 'completed';
-          } else if (index === progressSteps) {
-            step.status = 'active';
-          }
-        });
-      } else if (job.status === 'completed') {
-        newSteps.forEach(step => step.status = 'completed');
-      }
+      // Update steps based on progress percentage
+      const progressSteps = Math.floor(progress / 20); // Each step represents ~20% progress
+      
+      newSteps.forEach((step, index) => {
+        if (index < progressSteps) {
+          step.status = 'completed';
+        } else if (index === progressSteps) {
+          step.status = 'active';
+        } else {
+          step.status = 'pending';
+        }
+      });
       
       return newSteps;
     });
   };
 
-  useEffect(() => {
-    if (identifier) {
-      startPolling();
-    }
-  }, [identifier]);
+  const getEstimatedTime = (): number | null => {
+    if (!estimatedCompletion) return null;
+    const remaining = estimatedCompletion.getTime() - Date.now();
+    return Math.max(0, Math.floor(remaining / 1000));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center">
+        <LoadingSpinner type="beat" size={12} color="#10B981" className="mb-4" />
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Video Generation Error</h2>
+          <p className="text-gray-600">{errorDetails || "An error occurred while generating the video."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100">
@@ -101,7 +131,7 @@ const VideoGenerationLoading = () => {
                 Creating Your Video
               </h1>
               <p className="text-gray-600">
-                We're generating a professional property video with AI voiceover and stunning visuals.
+                {detailedStatus}
               </p>
             </div>
 
@@ -114,7 +144,7 @@ const VideoGenerationLoading = () => {
               />
               
               <EstimatedTime 
-                timeRemaining={estimatedTimeRemaining}
+                timeRemaining={getEstimatedTime()}
                 className="justify-center"
               />
             </div>

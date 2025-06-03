@@ -7,7 +7,7 @@ import { ProgressBar } from '@/components/loading/ProgressBar';
 import { EstimatedTime } from '@/components/loading/EstimatedTime';
 import { ProcessingSteps, type ProcessingStep } from '@/components/loading/ProcessingSteps';
 import { LoadingMessages } from '@/components/loading/LoadingMessages';
-import { useJobPolling } from '@/hooks/useJobPolling';
+import { useJobRealtime } from '@/hooks/useJobRealtime';
 import { toast } from '@/hooks/use-toast';
 
 const SubmissionLoading = () => {
@@ -27,40 +27,55 @@ const SubmissionLoading = () => {
     "Almost ready for review..."
   ];
 
-  const { job, progress, estimatedTimeRemaining, startPolling } = useJobPolling({
+  const {
+    job,
+    loading,
+    progress,
+    detailedStatus,
+    estimatedCompletion,
+    hasError,
+    errorDetails
+  } = useJobRealtime({
     displayId: identifier!,
-    expectedStatus: 'reviewing',
     onStatusChange: (job) => {
       updateStepsBasedOnJob(job);
     },
     onComplete: (job) => {
-      toast({
-        title: "Success",
-        description: "Property data extracted successfully!"
-      });
-      navigate(`/job/${identifier}/review`);
+      if (job.status === 'reviewing') {
+        toast({
+          title: "Success",
+          description: "Property data extracted successfully!"
+        });
+        navigate(`/job/${identifier}/review`);
+      } else if (job.status === 'failed') {
+        toast({
+          title: "Error",
+          description: errorDetails || "There was an issue processing your submission.",
+          variant: "destructive"
+        });
+        navigate(`/job/${identifier}/review`);
+      }
     },
     onError: (error) => {
-      console.error('Polling error:', error);
+      console.error('Real-time error:', error);
       toast({
         title: "Error",
-        description: "There was an issue processing your submission. Redirecting to review page.",
+        description: "Connection error. Redirecting to review page.",
         variant: "destructive"
       });
       navigate(`/job/${identifier}/review`);
-    },
-    maxDuration: 3 * 60 * 1000 // 3 minutes for submission
+    }
   });
 
   const updateStepsBasedOnJob = (job: any) => {
     setSteps(prevSteps => {
       const newSteps = [...prevSteps];
       
-      // Update steps based on job status
+      // Update steps based on job status and progress
       if (job.status === 'analyzing') {
         newSteps[0].status = 'completed';
         newSteps[1].status = 'active';
-      } else if (job.status === 'reviewing') {
+      } else if (job.status === 'reviewing' || job.progress_percentage >= 40) {
         newSteps[0].status = 'completed';
         newSteps[1].status = 'completed';
         newSteps[2].status = 'active';
@@ -70,11 +85,30 @@ const SubmissionLoading = () => {
     });
   };
 
-  useEffect(() => {
-    if (identifier) {
-      startPolling();
-    }
-  }, [identifier]);
+  const getEstimatedTime = (): number | null => {
+    if (!estimatedCompletion) return null;
+    const remaining = estimatedCompletion.getTime() - Date.now();
+    return Math.max(0, Math.floor(remaining / 1000)); // Convert to seconds
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <LoadingSpinner size={20} className="mb-4" />
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Processing Error</h2>
+          <p className="text-gray-600">{errorDetails || "An error occurred while processing your submission."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -90,7 +124,7 @@ const SubmissionLoading = () => {
                 Processing Your Submission
               </h1>
               <p className="text-gray-600">
-                We're analyzing your property URL and extracting the information.
+                {detailedStatus}
               </p>
             </div>
 
@@ -103,7 +137,7 @@ const SubmissionLoading = () => {
               />
               
               <EstimatedTime 
-                timeRemaining={estimatedTimeRemaining}
+                timeRemaining={getEstimatedTime()}
                 className="justify-center"
               />
             </div>

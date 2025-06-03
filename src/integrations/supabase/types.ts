@@ -13,32 +13,50 @@ export type Database = {
         Row: {
           created_at: string | null
           current_step: number | null
+          detailed_status: string | null
           display_id: string
+          error_details: string | null
+          estimated_completion: string | null
           id: string
+          last_updated_at: string | null
+          progress_percentage: number | null
           property_url: string | null
           status: string | null
           updated_at: string | null
           user_id: string | null
+          webhook_response: Json | null
         }
         Insert: {
           created_at?: string | null
           current_step?: number | null
+          detailed_status?: string | null
           display_id: string
+          error_details?: string | null
+          estimated_completion?: string | null
           id?: string
+          last_updated_at?: string | null
+          progress_percentage?: number | null
           property_url?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          webhook_response?: Json | null
         }
         Update: {
           created_at?: string | null
           current_step?: number | null
+          detailed_status?: string | null
           display_id?: string
+          error_details?: string | null
+          estimated_completion?: string | null
           id?: string
+          last_updated_at?: string | null
+          progress_percentage?: number | null
           property_url?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+          webhook_response?: Json | null
         }
         Relationships: []
       }
