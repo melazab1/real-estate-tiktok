@@ -1,15 +1,18 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useUserData } from '@/hooks/useUserData';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RecentJobs } from '@/components/RecentJobs';
-import { Video, User, LogOut, Plus } from 'lucide-react';
+import { Navigation } from '@/components/Navigation';
+import { Video, User, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { userData, loading } = useUserData();
+  const { handleError } = useErrorHandler();
 
   if (loading) {
     return (
@@ -19,33 +22,21 @@ export const Dashboard = () => {
     );
   }
 
+  if (!userData && !loading) {
+    handleError(
+      'Unable to load user data',
+      { title: 'Dashboard Error', fallbackMessage: 'Unable to load dashboard data. Please try refreshing the page.' }
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Video className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="text-xl font-bold">VideoGen</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {userData?.email || user?.email}
-              </span>
-              <Button variant="outline" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Welcome back{userData?.name ? `, ${userData.name}` : ''}!
           </h1>
           <p className="text-gray-600 mt-2">
@@ -54,7 +45,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Videos Used</CardTitle>
@@ -83,7 +74,7 @@ export const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Account Status</CardTitle>
             </CardHeader>
@@ -97,7 +88,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Create New Video</CardTitle>
