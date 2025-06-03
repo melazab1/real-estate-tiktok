@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,7 @@ const Index = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <div className="inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-            🎉 New! Multiple authentication options available
+            🔐 New! Secure 6-digit code authentication
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -108,7 +109,7 @@ const Index = () => {
         {/* Auth Options Preview */}
         <div className="mt-20 text-center bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Multiple ways to get started
+            Secure & Simple Authentication
           </h2>
           <p className="text-gray-600 mb-8">
             Choose the authentication method that works best for you
@@ -116,9 +117,9 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
             <div className="border border-gray-200 rounded-xl p-6 hover:border-blue-300 transition-colors">
-              <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Email + OTP</h3>
-              <p className="text-sm text-gray-600">Secure one-time password verification</p>
+              <Shield className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">6-Digit Code</h3>
+              <p className="text-sm text-gray-600">Secure verification code sent to your email</p>
             </div>
             <div className="border border-gray-200 rounded-xl p-6 hover:border-green-300 transition-colors">
               <Lock className="h-8 w-8 text-green-600 mx-auto mb-3" />

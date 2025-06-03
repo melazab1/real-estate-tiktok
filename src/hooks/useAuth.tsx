@@ -7,7 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithMagicLink: (email: string) => Promise<{ error: any }>;
+  signInWithOtp: (email: string) => Promise<{ error: any }>;
+  verifyOtp: (email: string, token: string) => Promise<{ error: any }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: any }>;
   signUpWithPassword: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -42,14 +43,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithMagicLink = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
-    
+  const signInWithOtp = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectUrl
+        shouldCreateUser: true
       }
+    });
+    
+    return { error };
+  };
+
+  const verifyOtp = async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email'
     });
     
     return { error };
@@ -100,7 +109,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     session,
     loading,
-    signInWithMagicLink,
+    signInWithOtp,
+    verifyOtp,
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,

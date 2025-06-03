@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +17,25 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signInWithMagicLink } = useAuth();
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const { signInWithOtp, verifyOtp } = useAuth();
   const { toast } = useToast();
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!email) return;
 
     setLoading(true);
     try {
-      const { error } = await signInWithMagicLink(email);
+      const { error } = await signInWithOtp(email);
       
       if (error) {
         toast({
@@ -36,15 +45,16 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
         });
       } else {
         setStep('otp');
+        setResendCooldown(60);
         toast({
-          title: "OTP sent!",
-          description: "Check your email for the verification code.",
+          title: "Verification code sent!",
+          description: "Check your email for the 6-digit code.",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to send OTP code",
+        description: "Failed to send verification code",
         variant: "destructive",
       });
     } finally {
@@ -56,12 +66,40 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
     e.preventDefault();
     if (!otp || otp.length !== 6) return;
 
-    // For now, show success message since OTP verification would need additional setup
-    toast({
-      title: "Feature coming soon",
-      description: "OTP verification will be available in the next update. Please use the magic link from your email.",
-    });
+    setLoading(true);
+    try {
+      const { error } = await verifyOtp(email, otp);
+      
+      if (error) {
+        toast({
+          title: "Invalid code",
+          description: "Please check the code and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "You're now signed in.",
+        });
+        // The auth state change will handle the redirect
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify code",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Auto-submit when OTP is complete
+  useEffect(() => {
+    if (otp.length === 6 && step === 'otp') {
+      handleVerifyOTP({ preventDefault: () => {} } as React.FormEvent);
+    }
+  }, [otp]);
 
   if (step === 'otp') {
     return (
@@ -98,8 +136,8 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
             </InputOTP>
           </div>
 
-          <Button type="submit" className="w-full" disabled={otp.length !== 6}>
-            Verify Code
+          <Button type="submit" className="w-full" disabled={otp.length !== 6 || loading}>
+            {loading ? "Verifying..." : "Verify Code"}
           </Button>
 
           <div className="text-center">
@@ -107,9 +145,12 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
               variant="link"
               size="sm"
               onClick={handleSendOTP}
-              disabled={loading}
+              disabled={loading || resendCooldown > 0}
             >
-              Didn't receive the code? Resend
+              {resendCooldown > 0 
+                ? `Resend code in ${resendCooldown}s` 
+                : "Didn't receive the code? Resend"
+              }
             </Button>
           </div>
         </form>
@@ -130,9 +171,9 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
       </Button>
 
       <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold mb-2">Sign in with OTP</h2>
+        <h2 className="text-xl font-semibold mb-2">Sign in with verification code</h2>
         <p className="text-sm text-gray-600">
-          Enter your email to receive a verification code
+          We'll send a 6-digit code to your email
         </p>
       </div>
 
@@ -150,7 +191,7 @@ export const OTPLoginForm = ({ onBackToOptions }: OTPLoginFormProps) => {
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading || !email}>
-          {loading ? "Sending..." : "Send verification code"}
+          {loading ? "Sending code..." : "Send verification code"}
         </Button>
       </form>
     </div>

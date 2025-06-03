@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OTPLoginForm } from '@/components/auth/OTPLoginForm';
 import { PasswordLoginForm } from '@/components/auth/PasswordLoginForm';
-import { Video, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Video, Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 
 type AuthMode = 'options' | 'otp' | 'password';
 
@@ -47,11 +47,11 @@ export const AuthNew = () => {
         >
           <div className="flex items-center">
             <div className="bg-blue-100 p-2 rounded-lg mr-4">
-              <Mail className="h-5 w-5 text-blue-600" />
+              <Shield className="h-5 w-5 text-blue-600" />
             </div>
             <div className="text-left">
-              <div className="font-medium">Continue with OTP</div>
-              <div className="text-sm text-gray-500">Get a verification code via email</div>
+              <div className="font-medium">Quick Login (Verification Code)</div>
+              <div className="text-sm text-gray-500">Get a 6-digit code via email</div>
             </div>
             <ArrowRight className="h-4 w-4 ml-auto text-gray-400" />
           </div>
@@ -68,7 +68,7 @@ export const AuthNew = () => {
               <Lock className="h-5 w-5 text-green-600" />
             </div>
             <div className="text-left">
-              <div className="font-medium">Continue with Password</div>
+              <div className="font-medium">Password Login</div>
               <div className="text-sm text-gray-500">Sign in with email and password</div>
             </div>
             <ArrowRight className="h-4 w-4 ml-auto text-gray-400" />
