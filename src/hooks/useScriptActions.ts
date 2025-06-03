@@ -52,6 +52,9 @@ export const useScriptActions = (jobId: string | undefined, script: VideoScript 
       // Create video record
       await ScriptService.createVideoRecord(jobId);
 
+      // Navigate to loading page immediately
+      navigate(`/job/${jobId}/video-generation-loading`);
+
       console.log('Calling video generation webhook with script data:', script);
 
       // Call video generation webhook
@@ -66,10 +69,8 @@ export const useScriptActions = (jobId: string | undefined, script: VideoScript 
         });
       } else {
         console.log('Video generation webhook completed successfully');
-        toast({ title: "Success", description: "Video generation started successfully!" });
       }
 
-      navigate(`/job/${jobId}/result`);
     } catch (error) {
       console.error('Error starting video generation:', error);
       toast({ title: "Error", description: "Failed to start video generation", variant: "destructive" });

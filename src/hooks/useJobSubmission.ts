@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -32,7 +31,10 @@ export const useJobSubmission = (userId: string | undefined) => {
       await JobService.createJob(jobId, userId, normalizedUrl);
       console.log('Job created successfully in database');
 
-      // Call property extraction webhook
+      // Navigate to loading page immediately for better UX
+      navigate(`/job/${jobId}/submission-loading`);
+
+      // Call property extraction webhook in background
       console.log('Calling property extraction webhook');
       const webhookResult = await WebhookService.callPropertyExtraction(jobId, normalizedUrl, userId);
       
@@ -45,14 +47,8 @@ export const useJobSubmission = (userId: string | undefined) => {
         });
       } else {
         console.log('Property extraction webhook completed successfully');
-        toast({ 
-          title: "Success", 
-          description: "URL submitted successfully! We're extracting the property information now." 
-        });
       }
       
-      // Navigate to review page regardless of webhook status
-      navigate(`/job/${jobId}/review`);
     } catch (error) {
       console.error('Error creating job:', error);
       

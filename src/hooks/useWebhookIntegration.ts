@@ -20,6 +20,9 @@ export const useWebhookIntegration = (jobId: string | undefined) => {
         .update({ status: 'generating_script', current_step: 3 })
         .eq('job_id', jobId);
 
+      // Navigate to loading page immediately
+      navigate(`/job/${jobId}/script-generation-loading`);
+
       console.log('Calling script generation webhook with property data:', property);
 
       // Call script generation webhook
@@ -46,7 +49,6 @@ export const useWebhookIntegration = (jobId: string | undefined) => {
         });
       } else {
         console.log('Script generation webhook completed successfully');
-        toast({ title: "Success", description: "Script generated successfully!" });
       }
 
       // Update job status to script ready
@@ -55,7 +57,6 @@ export const useWebhookIntegration = (jobId: string | undefined) => {
         .update({ status: 'script_ready', current_step: 3 })
         .eq('job_id', jobId);
 
-      navigate(`/job/${jobId}/script`);
     } catch (error) {
       console.error('Error generating script:', error);
       toast({ title: "Error", description: "Failed to generate script", variant: "destructive" });

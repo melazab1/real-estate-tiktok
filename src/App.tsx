@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,9 @@ import Profile from "./pages/Profile";
 import WebhookSettings from "./pages/WebhookSettings";
 import NotFound from "./pages/NotFound";
 import AuthNew from "./pages/AuthNew";
+import SubmissionLoading from "./pages/SubmissionLoading";
+import ScriptGenerationLoading from "./pages/ScriptGenerationLoading";
+import VideoGenerationLoading from "./pages/VideoGenerationLoading";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,6 +92,30 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <NewJob />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/job/:jobId/submission-loading" 
+                element={
+                  <ProtectedRoute>
+                    <SubmissionLoading />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/job/:jobId/script-generation-loading" 
+                element={
+                  <ProtectedRoute>
+                    <ScriptGenerationLoading />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/job/:jobId/video-generation-loading" 
+                element={
+                  <ProtectedRoute>
+                    <VideoGenerationLoading />
                   </ProtectedRoute>
                 } 
               />
