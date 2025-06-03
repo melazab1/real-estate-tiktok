@@ -26,4 +26,34 @@ export class JobService {
   static generateJobId(): string {
     return crypto.randomUUID();
   }
+
+  static async getJobByDisplayId(displayId: string) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('display_id', displayId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching job by display ID:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  static async getJobByJobId(jobId: string) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('job_id', jobId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching job by job ID:', error);
+      return null;
+    }
+
+    return data;
+  }
 }

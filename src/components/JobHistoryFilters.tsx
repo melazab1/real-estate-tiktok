@@ -18,21 +18,21 @@ export const JobHistoryFilters = ({
   onStatusFilterChange
 }: JobHistoryFiltersProps) => {
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+    <Card className="mb-4 sm:mb-6">
+      <CardContent className="pt-4 sm:pt-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search by title, location, or job ID..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
-          <div className="sm:w-48">
+          <div className="w-full sm:w-48">
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger>
+              <SelectTrigger className="text-sm">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>

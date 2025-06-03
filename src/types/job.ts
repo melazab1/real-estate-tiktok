@@ -2,6 +2,7 @@
 export interface Job {
   id: string;
   job_id: string;
+  display_id?: string | null;
   user_id: string;
   property_url: string | null;
   status: string | null;

@@ -57,6 +57,7 @@ export const JobHistory = () => {
     const firstProperty = job.properties?.[0];
     const matchesSearch = firstProperty?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          firstProperty?.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         job.display_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.job_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -74,9 +75,9 @@ export const JobHistory = () => {
     <div className="min-h-screen bg-gray-50">
       <JobHistoryHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Job History</h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Job History</h1>
           <p className="text-gray-600 mt-2">View and manage all your video generation jobs</p>
         </div>
 
@@ -88,8 +89,8 @@ export const JobHistory = () => {
         />
 
         <Card>
-          <CardHeader>
-            <CardTitle>Your Jobs ({filteredJobs.length})</CardTitle>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg sm:text-xl">Your Jobs ({filteredJobs.length})</CardTitle>
             <CardDescription>
               {jobs.length === 0 
                 ? "No jobs found. Start by creating your first video."
