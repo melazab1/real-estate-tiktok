@@ -19,9 +19,16 @@ export const useImageUpload = (displayId: string | undefined) => {
       .eq('display_id', displayId)
       .single();
 
-    if (jobError || !jobData) {
+    if (jobError) {
       console.error('Error fetching job:', jobError);
-      throw new Error(`Job not found: ${jobError?.message || 'Unknown error'}`);
+      if (jobError.code === 'PGRST116') {
+        throw new Error(`Job with ID "${displayId}" not found`);
+      }
+      throw new Error(`Database error: ${jobError.message}`);
+    }
+
+    if (!jobData) {
+      throw new Error(`Job with ID "${displayId}" not found`);
     }
 
     // Get property by job_id
@@ -63,11 +70,13 @@ export const useImageUpload = (displayId: string | undefined) => {
 
       if (imagesError) {
         console.error('Error fetching images:', imagesError);
-        throw imagesError;
+        throw new Error(`Failed to fetch images: ${imagesError.message}`);
       }
 
-      setImages(imagesData || []);
-      return imagesData || [];
+      const images = imagesData || [];
+      setImages(images);
+      console.log(`Fetched ${images.length} images for property`);
+      return images;
     } catch (error) {
       console.error('Error in fetchImages:', error);
       setImages([]);
@@ -77,21 +86,30 @@ export const useImageUpload = (displayId: string | undefined) => {
 
   const handleImageVisibilityChange = async (imageId: string, isVisible: boolean) => {
     try {
+      if (!imageId) {
+        throw new Error('Image ID is required');
+      }
+
       const { error } = await supabase
         .from('property_images')
         .update({ is_visible: isVisible })
         .eq('id', imageId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating image visibility:', error);
+        throw new Error(`Failed to update image visibility: ${error.message}`);
+      }
       
       setImages(prev => prev.map(img => 
         img.id === imageId ? { ...img, is_visible: isVisible } : img
       ));
+      
+      console.log(`Image ${imageId} visibility updated to ${isVisible}`);
     } catch (error) {
       console.error('Error updating image visibility:', error);
       toast({ 
         title: "Error", 
-        description: "Failed to update image visibility", 
+        description: error instanceof Error ? error.message : "Failed to update image visibility", 
         variant: "destructive" 
       });
     }
@@ -99,6 +117,15 @@ export const useImageUpload = (displayId: string | undefined) => {
 
   const handleImagesUpload = async (files: File[]) => {
     try {
+      if (!files || files.length === 0) {
+        toast({
+          title: "Error",
+          description: "No files selected for upload",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { propertyId } = await getJobAndProperty();
       
       if (!propertyId) {
@@ -134,7 +161,7 @@ export const useImageUpload = (displayId: string | undefined) => {
       console.error('Error uploading images:', error);
       toast({
         title: "Error",
-        description: "Failed to upload images. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to upload images. Please try again.",
         variant: "destructive"
       });
     }

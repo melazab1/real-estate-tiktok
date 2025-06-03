@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -14,8 +14,9 @@ export const useJobReview = () => {
   const [saving, setSaving] = useState(false);
   const [propertyLoading, setPropertyLoading] = useState(false);
   const [dataInitialized, setDataInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
 
-  // Use the real-time job tracking
+  // Use the real-time job tracking with enhanced error handling
   const {
     job,
     loading: jobLoading,
@@ -26,18 +27,18 @@ export const useJobReview = () => {
     errorDetails
   } = useJobRealtime({
     displayId: identifier!,
-    onStatusChange: (updatedJob) => {
+    onStatusChange: useCallback((updatedJob: Job) => {
       console.log('Job status updated:', updatedJob.status, updatedJob.detailed_status);
       
-      // Show status updates to user
-      if (updatedJob.detailed_status) {
+      // Show status updates to user only for significant changes
+      if (updatedJob.detailed_status && updatedJob.detailed_status !== detailedStatus) {
         toast({
           title: "Status Update",
           description: updatedJob.detailed_status
         });
       }
-    },
-    onComplete: (completedJob) => {
+    }, [detailedStatus]),
+    onComplete: useCallback((completedJob: Job) => {
       if (completedJob.status === 'completed') {
         toast({
           title: "Success",
@@ -50,15 +51,15 @@ export const useJobReview = () => {
           variant: "destructive"
         });
       }
-    },
-    onError: (error) => {
+    }, [errorDetails]),
+    onError: useCallback((error: Error) => {
       console.error('Real-time error:', error);
       toast({
         title: "Connection Error",
         description: "Lost connection to status updates. Please refresh the page.",
         variant: "destructive"
       });
-    }
+    }, [])
   });
 
   // Use the focused hooks
@@ -92,6 +93,7 @@ export const useJobReview = () => {
     if (!job || dataInitialized) return;
     
     setPropertyLoading(true);
+    setInitializationError(null);
     setDataInitialized(true);
 
     try {
@@ -105,6 +107,8 @@ export const useJobReview = () => {
           console.log('Default property created successfully');
         } catch (error) {
           console.error('Error creating default property:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          setInitializationError(`Failed to create property: ${errorMessage}`);
           toast({ 
             title: "Warning", 
             description: "Could not create property data. Some features may not work properly.", 
@@ -118,11 +122,13 @@ export const useJobReview = () => {
         await fetchImages();
       } catch (error) {
         console.error('Error fetching images:', error);
-        // Don't block the UI for image errors
+        // Don't block the UI for image errors, but log them
       }
 
     } catch (error) {
       console.error('Error in initializeData:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setInitializationError(`Failed to load data: ${errorMessage}`);
       toast({ 
         title: "Error", 
         description: "Failed to load property data", 
@@ -134,20 +140,53 @@ export const useJobReview = () => {
   };
 
   const saveChanges = async () => {
+    if (!property) {
+      toast({ 
+        title: "Error", 
+        description: "No property data to save", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       await saveProperty();
       toast({ title: "Success", description: "Changes saved successfully" });
     } catch (error) {
       console.error('Error saving changes:', error);
-      toast({ title: "Error", description: "Failed to save changes", variant: "destructive" });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast({ 
+        title: "Error", 
+        description: `Failed to save changes: ${errorMessage}`, 
+        variant: "destructive" 
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleGenerateScript = async () => {
-    await generateScript(property);
+    if (!property) {
+      toast({ 
+        title: "Error", 
+        description: "Property data is required to generate script", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    try {
+      await generateScript(property);
+    } catch (error) {
+      console.error('Error generating script:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast({ 
+        title: "Error", 
+        description: `Failed to generate script: ${errorMessage}`, 
+        variant: "destructive" 
+      });
+    }
   };
 
   return {
@@ -162,6 +201,7 @@ export const useJobReview = () => {
     detailedStatus,
     hasError,
     errorDetails,
+    initializationError,
     updateProperty,
     toggleVisibility,
     handleImageVisibilityChange,

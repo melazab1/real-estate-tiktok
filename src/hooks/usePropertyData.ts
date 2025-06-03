@@ -19,9 +19,16 @@ export const usePropertyData = (displayId: string | undefined) => {
       .eq('display_id', displayId)
       .single();
 
-    if (jobError || !jobData) {
+    if (jobError) {
       console.error('Error fetching job:', jobError);
-      throw new Error(`Job not found: ${jobError?.message || 'Unknown error'}`);
+      if (jobError.code === 'PGRST116') {
+        throw new Error(`Job with ID "${displayId}" not found`);
+      }
+      throw new Error(`Database error: ${jobError.message}`);
+    }
+
+    if (!jobData) {
+      throw new Error(`Job with ID "${displayId}" not found`);
     }
 
     return jobData.id;
@@ -40,7 +47,7 @@ export const usePropertyData = (displayId: string | undefined) => {
 
       if (propertyError) {
         console.error('Error fetching property:', propertyError);
-        throw propertyError;
+        throw new Error(`Failed to fetch property: ${propertyError.message}`);
       }
 
       if (propertyData) {
@@ -91,7 +98,7 @@ export const usePropertyData = (displayId: string | undefined) => {
 
       if (createError) {
         console.error('Error creating property:', createError);
-        throw createError;
+        throw new Error(`Failed to create property: ${createError.message}`);
       }
 
       const convertedCreatedProperty: Property = {
@@ -107,14 +114,29 @@ export const usePropertyData = (displayId: string | undefined) => {
   };
 
   const updateProperty = (field: keyof Property, value: any) => {
-    if (!property) return;
+    if (!property) {
+      console.warn('Cannot update property: property is null');
+      return;
+    }
     
-    const sanitizedValue = sanitizePropertyValue(field, value);
-    setProperty({ ...property, [field]: sanitizedValue });
+    try {
+      const sanitizedValue = sanitizePropertyValue(field, value);
+      setProperty({ ...property, [field]: sanitizedValue });
+    } catch (error) {
+      console.error('Error updating property field:', field, error);
+      toast({
+        title: "Validation Error",
+        description: `Invalid value for ${field}`,
+        variant: "destructive"
+      });
+    }
   };
 
   const toggleVisibility = (field: string) => {
-    if (!property) return;
+    if (!property) {
+      console.warn('Cannot toggle visibility: property is null');
+      return;
+    }
     const isVisible = property.is_visible || {};
     updateProperty('is_visible', { ...isVisible, [field]: !isVisible[field] });
   };
@@ -123,28 +145,35 @@ export const usePropertyData = (displayId: string | undefined) => {
     if (!property || !displayId) {
       throw new Error('Property and display ID are required');
     }
+
+    if (!property.id) {
+      throw new Error('Property ID is required for updates');
+    }
     
     try {
+      const updateData = {
+        title: property.title,
+        description: property.description,
+        price: property.price,
+        location: property.location,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        additional_info: property.additional_info,
+        is_visible: property.is_visible
+      };
+
       const { error } = await supabase
         .from('properties')
-        .update({
-          title: property.title,
-          description: property.description,
-          price: property.price,
-          location: property.location,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          area: property.area,
-          additional_info: property.additional_info,
-          is_visible: property.is_visible
-        })
+        .update(updateData)
         .eq('id', property.id);
 
       if (error) {
         console.error('Error saving property:', error);
-        throw error;
+        throw new Error(`Failed to save property: ${error.message}`);
       }
       
+      console.log('Property saved successfully');
       return true;
     } catch (error) {
       console.error('Error in saveProperty:', error);

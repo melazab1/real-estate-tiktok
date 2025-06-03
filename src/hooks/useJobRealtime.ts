@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Job } from '@/types/job';
 
@@ -19,8 +19,19 @@ export const useJobRealtime = ({
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const channelRef = useRef<any>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
     // Initial fetch
     const fetchInitialJob = async () => {
       try {
@@ -33,6 +44,8 @@ export const useJobRealtime = ({
           .eq('display_id', displayId)
           .single();
 
+        if (isCancelled || !mountedRef.current) return;
+
         if (fetchError) {
           throw new Error(`Job not found: ${fetchError.message}`);
         }
@@ -40,52 +53,76 @@ export const useJobRealtime = ({
         setJob(data);
         onStatusChange?.(data);
       } catch (err) {
+        if (isCancelled || !mountedRef.current) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch job';
         setError(errorMessage);
         onError?.(new Error(errorMessage));
       } finally {
-        setLoading(false);
+        if (!isCancelled && mountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchInitialJob();
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('job-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'jobs',
-          filter: `display_id=eq.${displayId}`
-        },
-        (payload) => {
-          console.log('Real-time job update received:', payload);
-          const updatedJob = payload.new as Job;
-          
-          setJob(updatedJob);
-          onStatusChange?.(updatedJob);
+    // Set up real-time subscription with better error handling
+    const setupRealtimeSubscription = () => {
+      // Clean up existing channel if any
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
 
-          // Check if job is completed or failed
-          if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
-            onComplete?.(updatedJob);
+      channelRef.current = supabase
+        .channel(`job-updates-${displayId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'jobs',
+            filter: `display_id=eq.${displayId}`
+          },
+          (payload) => {
+            if (!mountedRef.current) return;
+            
+            console.log('Real-time job update received:', payload);
+            const updatedJob = payload.new as Job;
+            
+            setJob(updatedJob);
+            onStatusChange?.(updatedJob);
+
+            // Check if job is completed or failed
+            if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
+              onComplete?.(updatedJob);
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to job updates');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to job updates');
-          onError?.(new Error('Failed to subscribe to real-time updates'));
-        }
-      });
+        )
+        .subscribe((status, err) => {
+          if (!mountedRef.current) return;
+
+          if (status === 'SUBSCRIBED') {
+            console.log('Successfully subscribed to job updates');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Error subscribing to job updates:', err);
+            onError?.(new Error('Failed to subscribe to real-time updates'));
+          } else if (status === 'TIMED_OUT') {
+            console.warn('Real-time subscription timed out, attempting to reconnect...');
+            // Attempt to reconnect after a delay
+            setTimeout(setupRealtimeSubscription, 3000);
+          }
+        });
+    };
+
+    setupRealtimeSubscription();
 
     return () => {
-      console.log('Cleaning up real-time subscription');
-      supabase.removeChannel(channel);
+      isCancelled = true;
+      if (channelRef.current) {
+        console.log('Cleaning up real-time subscription');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [displayId, onStatusChange, onComplete, onError]);
 
