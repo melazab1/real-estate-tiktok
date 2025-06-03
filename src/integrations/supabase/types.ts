@@ -42,6 +42,97 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          additional_info: string | null
+          area: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_visible: Json | null
+          job_id: string
+          location: string | null
+          price: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          area?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_visible?: Json | null
+          job_id: string
+          location?: string | null
+          price?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          area?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_visible?: Json | null
+          job_id?: string
+          location?: string | null
+          price?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          id: string
+          image_url: string
+          is_visible: boolean | null
+          job_id: string
+          sort_order: number | null
+          uploaded_at: string | null
+        }
+        Insert: {
+          id?: string
+          image_url: string
+          is_visible?: boolean | null
+          job_id: string
+          sort_order?: number | null
+          uploaded_at?: string | null
+        }
+        Update: {
+          id?: string
+          image_url?: string
+          is_visible?: boolean | null
+          job_id?: string
+          sort_order?: number | null
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
@@ -68,6 +159,94 @@ export type Database = {
           videos_used?: number | null
         }
         Relationships: []
+      }
+      video_scripts: {
+        Row: {
+          accent: string | null
+          created_at: string | null
+          id: string
+          is_approved: boolean | null
+          job_id: string
+          language: string | null
+          script_text: string | null
+          updated_at: string | null
+          voice_id: string | null
+        }
+        Insert: {
+          accent?: string | null
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          job_id: string
+          language?: string | null
+          script_text?: string | null
+          updated_at?: string | null
+          voice_id?: string | null
+        }
+        Update: {
+          accent?: string | null
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          job_id?: string
+          language?: string | null
+          script_text?: string | null
+          updated_at?: string | null
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_scripts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          created_at: string | null
+          duration: number | null
+          file_size: number | null
+          id: string
+          job_id: string
+          status: string | null
+          thumbnail_url: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: number | null
+          file_size?: number | null
+          id?: string
+          job_id: string
+          status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number | null
+          file_size?: number | null
+          id?: string
+          job_id?: string
+          status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+        ]
       }
     }
     Views: {

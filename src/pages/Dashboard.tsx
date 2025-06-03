@@ -3,7 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserData } from '@/hooks/useUserData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, User, LogOut } from 'lucide-react';
+import { RecentJobs } from '@/components/RecentJobs';
+import { Video, User, LogOut, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -95,7 +97,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Create New Video</CardTitle>
@@ -104,26 +106,16 @@ export const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full sm:w-auto">
-                <Video className="h-4 w-4 mr-2" />
-                Start New Project
+              <Button className="w-full sm:w-auto" asChild>
+                <Link to="/new-job">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Start New Project
+                </Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
-              <CardDescription>
-                Your latest video generation projects
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500 text-center py-8">
-                No projects yet. Create your first video to get started!
-              </p>
-            </CardContent>
-          </Card>
+          <RecentJobs />
         </div>
       </main>
     </div>

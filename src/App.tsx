@@ -9,6 +9,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import NewJob from "./pages/NewJob";
+import JobReview from "./pages/JobReview";
+import JobScript from "./pages/JobScript";
+import JobResult from "./pages/JobResult";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +32,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/new-job" 
+              element={
+                <ProtectedRoute>
+                  <NewJob />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/job/:jobId/review" 
+              element={
+                <ProtectedRoute>
+                  <JobReview />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/job/:jobId/script" 
+              element={
+                <ProtectedRoute>
+                  <JobScript />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/job/:jobId/result" 
+              element={
+                <ProtectedRoute>
+                  <JobResult />
                 </ProtectedRoute>
               } 
             />
