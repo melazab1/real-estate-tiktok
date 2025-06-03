@@ -2,14 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
-import { Video, Edit, Image as ImageIcon } from 'lucide-react';
+import { PropertyDetailsForm } from '@/components/PropertyDetailsForm';
+import { PropertyImagesCard } from '@/components/PropertyImagesCard';
+import { AdditionalInfoCard } from '@/components/AdditionalInfoCard';
+import { JobReviewActions } from '@/components/JobReviewActions';
+import { JobReviewHeader } from '@/components/JobReviewHeader';
 import { toast } from '@/hooks/use-toast';
 import type { Job, Property, PropertyImage } from '@/types/job';
 
@@ -191,20 +190,9 @@ const JobReview = () => {
     );
   }
 
-  const isVisible = property.is_visible || {};
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Video className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="text-xl font-bold">VideoGen</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <JobReviewHeader />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumb items={[
@@ -216,175 +204,27 @@ const JobReview = () => {
         <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Edit className="h-5 w-5 mr-2" />
-                Property Details
-              </CardTitle>
-              <CardDescription>Review and edit the property information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Title</label>
-                <Switch 
-                  checked={isVisible.title || false} 
-                  onCheckedChange={() => toggleVisibility('title')}
-                />
-              </div>
-              <Input
-                value={property.title || ''}
-                onChange={(e) => updateProperty('title', e.target.value)}
-                placeholder="Property title"
-              />
+          <PropertyDetailsForm 
+            property={property}
+            onUpdateProperty={updateProperty}
+            onToggleVisibility={toggleVisibility}
+          />
 
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Price</label>
-                <Switch 
-                  checked={isVisible.price || false} 
-                  onCheckedChange={() => toggleVisibility('price')}
-                />
-              </div>
-              <Input
-                type="number"
-                value={property.price || ''}
-                onChange={(e) => updateProperty('price', parseInt(e.target.value) || 0)}
-                placeholder="Price"
-              />
-
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Location</label>
-                <Switch 
-                  checked={isVisible.location || false} 
-                  onCheckedChange={() => toggleVisibility('location')}
-                />
-              </div>
-              <Input
-                value={property.location || ''}
-                onChange={(e) => updateProperty('location', e.target.value)}
-                placeholder="Location"
-              />
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Bedrooms</label>
-                    <Switch 
-                      checked={isVisible.bedrooms || false} 
-                      onCheckedChange={() => toggleVisibility('bedrooms')}
-                    />
-                  </div>
-                  <Input
-                    type="number"
-                    value={property.bedrooms || ''}
-                    onChange={(e) => updateProperty('bedrooms', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Bathrooms</label>
-                    <Switch 
-                      checked={isVisible.bathrooms || false} 
-                      onCheckedChange={() => toggleVisibility('bathrooms')}
-                    />
-                  </div>
-                  <Input
-                    type="number"
-                    value={property.bathrooms || ''}
-                    onChange={(e) => updateProperty('bathrooms', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm font-medium">Area (sq ft)</label>
-                    <Switch 
-                      checked={isVisible.area || false} 
-                      onCheckedChange={() => toggleVisibility('area')}
-                    />
-                  </div>
-                  <Input
-                    type="number"
-                    value={property.area || ''}
-                    onChange={(e) => updateProperty('area', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Description</label>
-                <Switch 
-                  checked={isVisible.description || false} 
-                  onCheckedChange={() => toggleVisibility('description')}
-                />
-              </div>
-              <Textarea
-                value={property.description || ''}
-                onChange={(e) => updateProperty('description', e.target.value)}
-                placeholder="Property description"
-                rows={3}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <ImageIcon className="h-5 w-5 mr-2" />
-                Property Images
-              </CardTitle>
-              <CardDescription>Manage property photos for the video</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {images.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {images.map((image) => (
-                    <div key={image.id} className="relative">
-                      <img 
-                        src={image.image_url} 
-                        alt="Property" 
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <Switch 
-                        className="absolute top-2 right-2"
-                        checked={image.is_visible || false}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No images found</p>
-                  <p className="text-sm">Images will be extracted from the property listing</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PropertyImagesCard images={images} />
         </div>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-            <CardDescription>Add any extra details you want to include in the video</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={property.additional_info || ''}
-              onChange={(e) => updateProperty('additional_info', e.target.value)}
-              placeholder="Any additional information about the property..."
-              rows={4}
-            />
-          </CardContent>
-        </Card>
-
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={saveChanges} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
-          <Button onClick={generateScript} className="flex-1">
-            Generate Script
-          </Button>
+        <div className="mb-8">
+          <AdditionalInfoCard 
+            property={property}
+            onUpdateProperty={updateProperty}
+          />
         </div>
+
+        <JobReviewActions 
+          saving={saving}
+          onSaveChanges={saveChanges}
+          onGenerateScript={generateScript}
+        />
       </main>
     </div>
   );
