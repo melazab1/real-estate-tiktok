@@ -28,8 +28,19 @@ export const RecentJobs = () => {
         .select(`
           *,
           properties!properties_job_id_fkey (
+            id,
+            job_id,
             title,
-            location
+            description,
+            price,
+            location,
+            bedrooms,
+            bathrooms,
+            area,
+            additional_info,
+            is_visible,
+            created_at,
+            updated_at
           )
         `)
         .eq('user_id', user?.id)

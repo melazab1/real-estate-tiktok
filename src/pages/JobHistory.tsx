@@ -30,13 +30,30 @@ export const JobHistory = () => {
         .select(`
           *,
           properties!properties_job_id_fkey (
+            id,
+            job_id,
             title,
-            location
+            description,
+            price,
+            location,
+            bedrooms,
+            bathrooms,
+            area,
+            additional_info,
+            is_visible,
+            created_at,
+            updated_at
           ),
           videos!videos_job_id_fkey (
+            id,
+            job_id,
             video_url,
             thumbnail_url,
-            status
+            status,
+            duration,
+            file_size,
+            created_at,
+            updated_at
           )
         `)
         .eq('user_id', user?.id)

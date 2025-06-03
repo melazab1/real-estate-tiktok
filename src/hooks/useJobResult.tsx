@@ -31,7 +31,7 @@ export const useJobResult = () => {
       const { data: videoData, error: videoError } = await supabase
         .from('videos')
         .select('*')
-        .eq('display_id', identifier)
+        .eq('job_id', jobData.id)
         .maybeSingle();
 
       if (!videoError && videoData) {
@@ -40,7 +40,7 @@ export const useJobResult = () => {
         // Simulate video processing
         const mockVideo: VideoType = {
           id: crypto.randomUUID(),
-          display_id: identifier!,
+          job_id: jobData.id,
           video_url: null,
           thumbnail_url: null,
           status: 'processing',
