@@ -299,30 +299,42 @@ export type Database = {
       webhook_settings: {
         Row: {
           created_at: string
+          extraction_webhook_url: string | null
           id: string
+          payment_webhook_url: string | null
           property_extraction_url: string | null
           script_generation_url: string | null
+          script_webhook_url: string | null
           updated_at: string
           user_id: string
           video_generation_url: string | null
+          video_webhook_url: string | null
         }
         Insert: {
           created_at?: string
+          extraction_webhook_url?: string | null
           id?: string
+          payment_webhook_url?: string | null
           property_extraction_url?: string | null
           script_generation_url?: string | null
+          script_webhook_url?: string | null
           updated_at?: string
           user_id: string
           video_generation_url?: string | null
+          video_webhook_url?: string | null
         }
         Update: {
           created_at?: string
+          extraction_webhook_url?: string | null
           id?: string
+          payment_webhook_url?: string | null
           property_extraction_url?: string | null
           script_generation_url?: string | null
+          script_webhook_url?: string | null
           updated_at?: string
           user_id?: string
           video_generation_url?: string | null
+          video_webhook_url?: string | null
         }
         Relationships: []
       }

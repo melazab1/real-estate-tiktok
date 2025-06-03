@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { WebhookService } from '@/services/webhookService';
+import { useAuth } from '@/hooks/useAuth';
 import type { VideoScript } from '@/types/job';
 
 export const useJobScript = (jobId: string | undefined) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [script, setScript] = useState<VideoScript | null>(null);
@@ -102,19 +105,22 @@ export const useJobScript = (jobId: string | undefined) => {
       return;
     }
 
+    if (!user) return;
+
     try {
       // Save current script first
       await saveScript();
 
-      // Approve script and start generation
+      // Approve script
       await supabase
         .from('video_scripts')
         .update({ is_approved: true })
         .eq('job_id', jobId);
 
+      // Update job status
       await supabase
         .from('jobs')
-        .update({ status: 'generating', current_step: 4 })
+        .update({ status: 'generating_video', current_step: 4 })
         .eq('job_id', jobId);
 
       // Create video record
@@ -125,7 +131,23 @@ export const useJobScript = (jobId: string | undefined) => {
           status: 'processing'
         });
 
-      toast({ title: "Success", description: "Video generation started" });
+      console.log('Calling video generation webhook with script data:', script);
+
+      // Call video generation webhook
+      const webhookResult = await WebhookService.callVideoGeneration(jobId!, script, user.id);
+      
+      if (!webhookResult.success) {
+        console.error('Video generation webhook failed:', webhookResult.error);
+        toast({ 
+          title: "Video Generation Started with Warning", 
+          description: "Video generation started but there was an issue with the webhook. Check the result page for updates.", 
+          variant: "destructive" 
+        });
+      } else {
+        console.log('Video generation webhook completed successfully');
+        toast({ title: "Success", description: "Video generation started successfully!" });
+      }
+
       navigate(`/job/${jobId}/result`);
     } catch (error) {
       console.error('Error starting video generation:', error);

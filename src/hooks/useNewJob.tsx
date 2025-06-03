@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { WebhookService } from '@/services/webhookService';
 
 export const useNewJob = () => {
   const [propertyUrl, setPropertyUrl] = useState('');
@@ -94,7 +95,7 @@ export const useNewJob = () => {
       
       console.log('Creating job with normalized URL:', normalizedUrl, 'Job ID:', jobId);
       
-      // Insert job - this will automatically trigger the property extraction Edge Function via database trigger
+      // Insert job record
       const { error: jobError } = await supabase
         .from('jobs')
         .insert({
@@ -110,14 +111,27 @@ export const useNewJob = () => {
         throw jobError;
       }
 
-      console.log('Job created successfully - database trigger will automatically call property extraction');
+      console.log('Job created successfully, calling property extraction webhook');
 
-      toast({ 
-        title: "Success", 
-        description: "URL submitted successfully! We're getting the information now." 
-      });
+      // Call property extraction webhook directly
+      const webhookResult = await WebhookService.callPropertyExtraction(jobId, normalizedUrl, user.id);
       
-      // Navigate to review page where user can watch the progress
+      if (!webhookResult.success) {
+        console.error('Property extraction webhook failed:', webhookResult.error);
+        toast({ 
+          title: "Processing Started with Warning", 
+          description: "URL submitted but there was an issue with property extraction. You can retry from the review page.", 
+          variant: "destructive" 
+        });
+      } else {
+        console.log('Property extraction webhook completed successfully');
+        toast({ 
+          title: "Success", 
+          description: "URL submitted successfully! We're extracting the property information now." 
+        });
+      }
+      
+      // Navigate to review page regardless of webhook status
       navigate(`/job/${jobId}/review`);
     } catch (error) {
       console.error('Error creating job:', error);

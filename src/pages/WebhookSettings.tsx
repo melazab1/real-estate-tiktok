@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Video, Save, Settings, ExternalLink } from 'lucide-react';
+import { Video, Save, Settings, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface WebhookSettings {
@@ -160,16 +160,52 @@ export const WebhookSettings = () => {
             Webhook Settings
           </h1>
           <p className="text-gray-600 mt-2">
-            Configure webhook URLs for external integrations
+            Configure webhook URLs for external integrations. Webhooks are called directly from the frontend with immediate fallback to Edge Functions.
           </p>
         </div>
+
+        {/* System Status */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+              System Status: Direct Webhook Integration
+            </CardTitle>
+            <CardDescription>
+              Your VideoGen system now uses direct webhook calls for better reliability and user feedback.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm">Direct Frontend Calls</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="text-sm">Edge Function Fallback</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm">Real-time Error Handling</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Property Extraction Webhook</CardTitle>
+              <CardTitle className="flex items-center">
+                Property Extraction Webhook
+                {settings.property_extraction_url ? (
+                  <CheckCircle className="h-4 w-4 text-green-600 ml-2" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-orange-500 ml-2" />
+                )}
+              </CardTitle>
               <CardDescription>
-                URL to call when a property listing needs to be extracted and analyzed
+                Called immediately when a URL is submitted. If not configured, falls back to built-in Edge Function.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -184,16 +220,23 @@ export const WebhookSettings = () => {
                 />
               </div>
               <div className="text-sm text-gray-500">
-                This webhook will receive job details and property URL for processing.
+                Receives: job_id, property_url, user_id, timestamp
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Script Generation Webhook</CardTitle>
+              <CardTitle className="flex items-center">
+                Script Generation Webhook
+                {settings.script_generation_url ? (
+                  <CheckCircle className="h-4 w-4 text-green-600 ml-2" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-orange-500 ml-2" />
+                )}
+              </CardTitle>
               <CardDescription>
-                URL to call when a video script needs to be generated
+                Called when user clicks "Generate Script" after reviewing property data.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -208,16 +251,23 @@ export const WebhookSettings = () => {
                 />
               </div>
               <div className="text-sm text-gray-500">
-                This webhook will receive property data and generate a video script.
+                Receives: job_id, property_data, user_id, timestamp
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Video Generation Webhook</CardTitle>
+              <CardTitle className="flex items-center">
+                Video Generation Webhook
+                {settings.video_generation_url ? (
+                  <CheckCircle className="h-4 w-4 text-green-600 ml-2" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-orange-500 ml-2" />
+                )}
+              </CardTitle>
               <CardDescription>
-                URL to call when the final video needs to be generated
+                Called when user approves script and starts video generation.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -232,44 +282,7 @@ export const WebhookSettings = () => {
                 />
               </div>
               <div className="text-sm text-gray-500">
-                This webhook will receive script and property data to generate the final video.
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Webhook Documentation</CardTitle>
-              <CardDescription>
-                Learn more about implementing webhooks for your VideoGen integration
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <div className="font-medium">API Documentation</div>
-                    <div className="text-sm text-gray-500">
-                      Complete webhook payload schemas and examples
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Docs
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <div className="font-medium">Example Implementation</div>
-                    <div className="text-sm text-gray-500">
-                      Sample webhook handlers in various languages
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Examples
-                  </Button>
-                </div>
+                Receives: job_id, script_data, user_id, timestamp
               </div>
             </CardContent>
           </Card>
