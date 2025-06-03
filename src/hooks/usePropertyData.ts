@@ -8,10 +8,11 @@ import { sanitizePropertyValue } from '@/validation/propertyValidation';
 export const usePropertyData = (displayId: string | undefined) => {
   const [property, setProperty] = useState<Property | null>(null);
 
-  const fetchProperty = async () => {
-    if (!displayId) return null;
+  const getJobId = async () => {
+    if (!displayId) {
+      throw new Error('Display ID is required');
+    }
 
-    // First get the job to get the job_id
     const { data: jobData, error: jobError } = await supabase
       .from('jobs')
       .select('id')
@@ -20,79 +21,89 @@ export const usePropertyData = (displayId: string | undefined) => {
 
     if (jobError || !jobData) {
       console.error('Error fetching job:', jobError);
+      throw new Error(`Job not found: ${jobError?.message || 'Unknown error'}`);
+    }
+
+    return jobData.id;
+  };
+
+  const fetchProperty = async () => {
+    try {
+      const jobId = await getJobId();
+
+      // Get property using job_id
+      const { data: propertyData, error: propertyError } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('job_id', jobId)
+        .maybeSingle();
+
+      if (propertyError) {
+        console.error('Error fetching property:', propertyError);
+        throw propertyError;
+      }
+
+      if (propertyData) {
+        const convertedProperty: Property = {
+          ...propertyData,
+          is_visible: propertyData.is_visible as Record<string, boolean> || {}
+        };
+        setProperty(convertedProperty);
+        return convertedProperty;
+      }
+
       return null;
+    } catch (error) {
+      console.error('Error in fetchProperty:', error);
+      throw error;
     }
-
-    // Then get the property using job_id
-    const { data: propertyData, error: propertyError } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('job_id', jobData.id)
-      .maybeSingle();
-
-    if (!propertyError && propertyData) {
-      const convertedProperty: Property = {
-        ...propertyData,
-        is_visible: propertyData.is_visible as Record<string, boolean> || {}
-      };
-      setProperty(convertedProperty);
-      return convertedProperty;
-    }
-
-    return null;
   };
 
   const createDefaultProperty = async () => {
-    if (!displayId) return null;
+    try {
+      const jobId = await getJobId();
 
-    // First get the job to get the job_id
-    const { data: jobData, error: jobError } = await supabase
-      .from('jobs')
-      .select('id')
-      .eq('display_id', displayId)
-      .single();
+      const newProperty = {
+        job_id: jobId,
+        title: 'Beautiful Family Home',
+        description: 'Spacious and well-maintained property',
+        price: 450000,
+        location: 'Prime Location',
+        bedrooms: 3,
+        bathrooms: 2,
+        area: 2000,
+        is_visible: {
+          title: true,
+          description: true,
+          price: true,
+          location: true,
+          bedrooms: true,
+          bathrooms: true,
+          area: true
+        }
+      };
 
-    if (jobError || !jobData) {
-      console.error('Error fetching job:', jobError);
-      return null;
-    }
+      const { data: createdProperty, error: createError } = await supabase
+        .from('properties')
+        .insert(newProperty)
+        .select()
+        .single();
 
-    const newProperty = {
-      job_id: jobData.id,
-      title: 'Beautiful Family Home',
-      description: 'Spacious and well-maintained property',
-      price: 450000,
-      location: 'Prime Location',
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 2000,
-      is_visible: {
-        title: true,
-        description: true,
-        price: true,
-        location: true,
-        bedrooms: true,
-        bathrooms: true,
-        area: true
+      if (createError) {
+        console.error('Error creating property:', createError);
+        throw createError;
       }
-    };
 
-    const { data: createdProperty, error: createError } = await supabase
-      .from('properties')
-      .insert(newProperty)
-      .select()
-      .single();
-
-    if (!createError) {
       const convertedCreatedProperty: Property = {
         ...createdProperty,
         is_visible: createdProperty.is_visible as Record<string, boolean> || {}
       };
       setProperty(convertedCreatedProperty);
       return convertedCreatedProperty;
+    } catch (error) {
+      console.error('Error in createDefaultProperty:', error);
+      throw error;
     }
-
-    return null;
   };
 
   const updateProperty = (field: keyof Property, value: any) => {
@@ -109,7 +120,9 @@ export const usePropertyData = (displayId: string | undefined) => {
   };
 
   const saveProperty = async () => {
-    if (!property || !displayId) return false;
+    if (!property || !displayId) {
+      throw new Error('Property and display ID are required');
+    }
     
     try {
       const { error } = await supabase
@@ -127,10 +140,14 @@ export const usePropertyData = (displayId: string | undefined) => {
         })
         .eq('id', property.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving property:', error);
+        throw error;
+      }
+      
       return true;
     } catch (error) {
-      console.error('Error saving property:', error);
+      console.error('Error in saveProperty:', error);
       throw error;
     }
   };

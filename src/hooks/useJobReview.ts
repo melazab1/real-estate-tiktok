@@ -13,6 +13,7 @@ export const useJobReview = () => {
   const { identifier } = useParams<{ identifier: string }>();
   const [saving, setSaving] = useState(false);
   const [propertyLoading, setPropertyLoading] = useState(false);
+  const [dataInitialized, setDataInitialized] = useState(false);
 
   // Use the real-time job tracking
   const {
@@ -79,22 +80,26 @@ export const useJobReview = () => {
 
   const { generateScript } = useWebhookIntegration(identifier);
 
+  // Initialize data when job is available
   useEffect(() => {
-    if (identifier && job) {
-      fetchPropertyAndImages();
+    if (identifier && job && !dataInitialized) {
+      console.log('Initializing data for job:', job.id);
+      initializeData();
     }
-  }, [identifier, job]);
+  }, [identifier, job, dataInitialized]);
 
-  const fetchPropertyAndImages = async () => {
+  const initializeData = async () => {
+    if (!job || dataInitialized) return;
+    
+    setPropertyLoading(true);
+    setDataInitialized(true);
+
     try {
-      // Try to fetch existing property
-      console.log('Fetching property data...');
+      console.log('Fetching property data for job:', job.id);
       const existingProperty = await fetchProperty();
       
       if (!existingProperty) {
         console.log('No property found, creating default property...');
-        setPropertyLoading(true);
-        
         try {
           await createDefaultProperty();
           console.log('Default property created successfully');
@@ -105,8 +110,6 @@ export const useJobReview = () => {
             description: "Could not create property data. Some features may not work properly.", 
             variant: "destructive" 
           });
-        } finally {
-          setPropertyLoading(false);
         }
       }
 
@@ -119,12 +122,14 @@ export const useJobReview = () => {
       }
 
     } catch (error) {
-      console.error('Error in fetchPropertyAndImages:', error);
+      console.error('Error in initializeData:', error);
       toast({ 
         title: "Error", 
         description: "Failed to load property data", 
         variant: "destructive" 
       });
+    } finally {
+      setPropertyLoading(false);
     }
   };
 
