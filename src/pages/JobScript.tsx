@@ -3,12 +3,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
-import { Video, FileText, Mic } from 'lucide-react';
+import { ScriptEditor } from '@/components/ScriptEditor';
+import { VoiceSelector } from '@/components/VoiceSelector';
+import { Video } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { VideoScript } from '@/types/job';
 
@@ -34,7 +33,23 @@ const JobScript = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      setScript(data);
+      
+      // Set default values if script doesn't exist
+      if (!data) {
+        setScript({
+          id: '',
+          job_id: jobId!,
+          script_text: '',
+          language: 'English',
+          accent: 'US',
+          voice_id: 'en-us-female-1',
+          is_approved: false,
+          created_at: null,
+          updated_at: null
+        });
+      } else {
+        setScript(data);
+      }
     } catch (error) {
       console.error('Error fetching script:', error);
       toast({ title: "Error", description: "Failed to load script", variant: "destructive" });
@@ -53,18 +68,33 @@ const JobScript = () => {
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('video_scripts')
-        .update({
-          script_text: script.script_text,
-          language: script.language,
-          accent: script.accent,
-          voice_id: script.voice_id
-        })
-        .eq('job_id', jobId);
+      const scriptData = {
+        script_text: script.script_text,
+        language: script.language,
+        accent: script.accent,
+        voice_id: script.voice_id
+      };
 
-      if (error) throw error;
+      if (script.id) {
+        // Update existing script
+        const { error } = await supabase
+          .from('video_scripts')
+          .update(scriptData)
+          .eq('job_id', jobId);
+        if (error) throw error;
+      } else {
+        // Create new script
+        const { error } = await supabase
+          .from('video_scripts')
+          .insert({
+            job_id: jobId!,
+            ...scriptData
+          });
+        if (error) throw error;
+      }
+
       toast({ title: "Success", description: "Script saved successfully" });
+      await fetchScript(); // Refresh to get the latest data
     } catch (error) {
       console.error('Error saving script:', error);
       toast({ title: "Error", description: "Failed to save script", variant: "destructive" });
@@ -74,7 +104,16 @@ const JobScript = () => {
   };
 
   const approveAndGenerate = async () => {
+    if (!script?.script_text?.trim()) {
+      toast({ title: "Error", description: "Please add a script before generating video", variant: "destructive" });
+      return;
+    }
+
     try {
+      // Save current script first
+      await saveScript();
+
+      // Approve script and start generation
       await supabase
         .from('video_scripts')
         .update({ is_approved: true })
@@ -133,7 +172,7 @@ const JobScript = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumb items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'New Project', href: '/new-job' },
@@ -143,97 +182,57 @@ const JobScript = () => {
 
         <ProgressIndicator currentStep={3} totalSteps={4} stepLabel="Review Script & Select Voice" />
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
-                Video Script
-              </CardTitle>
-              <CardDescription>Review and edit the generated script for your video</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={script.script_text || ''}
-                onChange={(e) => updateScript('script_text', e.target.value)}
-                rows={10}
-                className="w-full"
-                placeholder="Enter your video script here..."
-              />
-            </CardContent>
-          </Card>
+        <div className="space-y-8">
+          {/* Script Editor */}
+          <ScriptEditor
+            script={script.script_text || ''}
+            onScriptChange={(newScript) => updateScript('script_text', newScript)}
+            onSave={saveScript}
+          />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Mic className="h-5 w-5 mr-2" />
-                Voice Settings
-              </CardTitle>
-              <CardDescription>Choose the voice characteristics for your video narration</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Language</label>
-                <Select 
-                  value={script.language || 'English'} 
-                  onValueChange={(value) => updateScript('language', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="English">English</SelectItem>
-                    <SelectItem value="Spanish">Spanish</SelectItem>
-                    <SelectItem value="French">French</SelectItem>
-                    <SelectItem value="German">German</SelectItem>
-                    <SelectItem value="Italian">Italian</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Voice Selector */}
+          <VoiceSelector
+            selectedLanguage={script.language || 'English'}
+            selectedAccent={script.accent || 'US'}
+            selectedVoiceId={script.voice_id || 'en-us-female-1'}
+            onLanguageChange={(language) => {
+              updateScript('language', language);
+              // Reset accent to US when changing to English, or clear it for other languages
+              if (language === 'English') {
+                updateScript('accent', 'US');
+                updateScript('voice_id', 'en-us-female-1');
+              } else {
+                updateScript('accent', null);
+                // Set first available voice for the new language
+                const languageCode = language.toLowerCase().substring(0, 2);
+                updateScript('voice_id', `${languageCode}-female-1`);
+              }
+            }}
+            onAccentChange={(accent) => {
+              updateScript('accent', accent);
+              // Update voice to match new accent
+              const accentCode = accent.toLowerCase() === 'uk' ? 'uk' : 
+                                accent.toLowerCase() === 'australian' ? 'au' : 'us';
+              updateScript('voice_id', `en-${accentCode}-female-1`);
+            }}
+            onVoiceChange={(voiceId) => updateScript('voice_id', voiceId)}
+          />
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Accent</label>
-                <Select 
-                  value={script.accent || 'US'} 
-                  onValueChange={(value) => updateScript('accent', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select accent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="US">US</SelectItem>
-                    <SelectItem value="UK">UK</SelectItem>
-                    <SelectItem value="Australian">Australian</SelectItem>
-                    <SelectItem value="Canadian">Canadian</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Voice</label>
-                <Select 
-                  value={script.voice_id || 'female-1'} 
-                  onValueChange={(value) => updateScript('voice_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="female-1">Female - Professional</SelectItem>
-                    <SelectItem value="female-2">Female - Warm</SelectItem>
-                    <SelectItem value="male-1">Male - Professional</SelectItem>
-                    <SelectItem value="male-2">Male - Friendly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={saveScript} disabled={saving}>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              variant="outline" 
+              onClick={saveScript} 
+              disabled={saving}
+              className="sm:w-auto"
+            >
               {saving ? 'Saving...' : 'Save Script'}
             </Button>
-            <Button onClick={approveAndGenerate} className="flex-1">
+            <Button 
+              onClick={approveAndGenerate} 
+              className="flex-1 sm:flex-none sm:px-8"
+              disabled={!script.script_text?.trim()}
+            >
               Approve & Generate Video
             </Button>
           </div>
