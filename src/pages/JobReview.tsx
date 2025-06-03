@@ -7,6 +7,8 @@ import { AdditionalInfoCard } from '@/components/AdditionalInfoCard';
 import { JobReviewActions } from '@/components/JobReviewActions';
 import { Navigation } from '@/components/Navigation';
 import { RouteGuard } from '@/components/RouteGuard';
+import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useJobReview } from '@/hooks/useJobReview';
 
 const JobReview = () => {
@@ -14,7 +16,9 @@ const JobReview = () => {
     loading,
     saving,
     job,
+    jobError,
     property,
+    propertyLoading,
     images,
     updateProperty,
     toggleVisibility,
@@ -24,15 +28,20 @@ const JobReview = () => {
     generateScript
   } = useJobReview();
 
+  // Show loading spinner while initial data is being fetched
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading job data...</p>
+        </div>
       </div>
     );
   }
 
-  if (!job || !property) {
+  // Show error if job not found
+  if (jobError || !job) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -43,6 +52,59 @@ const JobReview = () => {
     );
   }
 
+  // Show property loading state
+  if (propertyLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Breadcrumb items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'New Project', href: '/new-job' },
+            { label: 'Review Data' }
+          ]} />
+
+          <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
+          
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <LoadingSpinner size={20} className="mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Setting up property data...</h3>
+              <p className="text-gray-600">This will only take a moment.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show warning if property is still missing after loading
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Breadcrumb items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'New Project', href: '/new-job' },
+            { label: 'Review Data' }
+          ]} />
+
+          <ProgressIndicator currentStep={2} totalSteps={4} stepLabel="Review & Edit Property Data" />
+          
+          <Alert className="max-w-2xl mx-auto mt-8">
+            <AlertDescription>
+              Property data could not be loaded. Please try refreshing the page or contact support if the problem persists.
+            </AlertDescription>
+          </Alert>
+        </main>
+      </div>
+    );
+  }
+
+  // Main content when everything is loaded successfully
   return (
     <RouteGuard job={job} currentStep="review">
       <div className="min-h-screen bg-gray-50">
