@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 export const Auth = () => {
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const { user, signInWithMagicLink } = useAuth();
+  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const { user, signInWithOtp, verifyOtp } = useAuth();
   const { toast } = useToast();
 
   // Redirect if already authenticated
@@ -20,13 +22,13 @@ export const Auth = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setLoading(true);
     try {
-      const { error } = await signInWithMagicLink(email);
+      const { error } = await signInWithOtp(email);
       
       if (error) {
         toast({
@@ -35,10 +37,10 @@ export const Auth = () => {
           variant: "destructive",
         });
       } else {
-        setEmailSent(true);
+        setStep('otp');
         toast({
-          title: "Magic link sent!",
-          description: "Check your email for the login link.",
+          title: "Verification code sent!",
+          description: "Check your email for the 6-digit code.",
         });
       }
     } catch (error) {
@@ -52,24 +54,70 @@ export const Auth = () => {
     }
   };
 
-  if (emailSent) {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) return;
+
+    setLoading(true);
+    try {
+      const { error } = await verifyOtp(email, otp);
+      
+      if (error) {
+        toast({
+          title: "Invalid code",
+          description: "Please check the code and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "You're now signed in.",
+        });
+        // The auth state change will handle the redirect
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify code",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'otp') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardTitle className="text-2xl">Enter verification code</CardTitle>
             <CardDescription>
-              We've sent a magic link to <strong>{email}</strong>
+              We sent a 6-digit code to <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">
-              Click the link in your email to sign in to your account.
-            </p>
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="flex justify-center">
+                <InputOTP value={otp} onChange={setOtp} maxLength={6}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button type="submit" className="w-full" disabled={otp.length !== 6 || loading}>
+                {loading ? "Verifying..." : "Verify Code"}
+              </Button>
+            </form>
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={() => setEmailSent(false)}
+              onClick={() => setStep('email')}
             >
               Try different email
             </Button>
@@ -85,11 +133,11 @@ export const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to your account with a magic link
+            Sign in to your account with a verification code
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleMagicLink} className="space-y-4">
+          <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -103,11 +151,11 @@ export const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading || !email}>
-              {loading ? "Sending..." : "Send magic link"}
+              {loading ? "Sending..." : "Send verification code"}
             </Button>
           </form>
           <p className="text-xs text-gray-500 text-center mt-4">
-            We'll send you a secure link to sign in without a password.
+            We'll send you a secure 6-digit code to sign in without a password.
           </p>
         </CardContent>
       </Card>
